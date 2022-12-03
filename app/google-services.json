@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "733941763731",
+    "firebase_url": "https://hotelbook-cc9d5-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "hotelbook-cc9d5",
+    "storage_bucket": "hotelbook-cc9d5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:733941763731:android:3b8799527919b8709a4766",
+        "android_client_info": {
+          "package_name": "by.yaugesha.hotelbook"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "733941763731-0l7rhc117kt8gootj1k2pg1l24g9ulbd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE2vBCa-77pBDLCI38n_T81LZxRkuER1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "733941763731-0l7rhc117kt8gootj1k2pg1l24g9ulbd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:733941763731:android:937f695d001462149a4766",
+        "android_client_info": {
+          "package_name": "by.yaugesha.hotelbooking"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "733941763731-0l7rhc117kt8gootj1k2pg1l24g9ulbd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE2vBCa-77pBDLCI38n_T81LZxRkuER1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "733941763731-0l7rhc117kt8gootj1k2pg1l24g9ulbd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:733941763731:android:ec00bf0b3227606c9a4766",
+        "android_client_info": {
+          "package_name": "com.example.boardgamestoreapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "733941763731-0l7rhc117kt8gootj1k2pg1l24g9ulbd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBE2vBCa-77pBDLCI38n_T81LZxRkuER1k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "733941763731-0l7rhc117kt8gootj1k2pg1l24g9ulbd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
