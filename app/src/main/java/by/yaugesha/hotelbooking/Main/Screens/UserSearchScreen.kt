@@ -216,7 +216,7 @@ fun SearchField(text: MutableState<String>) {
     val keyboardController = LocalSoftwareKeyboardController.current
     OutlinedTextField(
         value = text.value, onValueChange = {text.value = it},
-        placeholder = { Text(text = "Minsk, Belarus", fontSize = 14.sp, color = Color.Black) },
+        placeholder = { Text(text = "Minsk, Belarus", fontSize = 14.sp, color = Color.Black.copy(0.5f)) },
         shape = (RoundedCornerShape(24.dp)),
         singleLine = true,
         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White),

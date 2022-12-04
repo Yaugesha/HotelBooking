@@ -139,7 +139,7 @@ fun AddRoom(navController: NavController, hotelId: String) {
             {
                vm.setRoom(hotelId, peopleCapacity.value.toInt(), numberOfRooms.value.toInt(),  square.value.toInt(), price.value.toInt(),
                     amountOfRooms.value.toInt(), numberOfDoubleBeds.value, numberOfSingleBeds.value, bitmap.value!!, mapOfRoomAmenities)
-                navController.navigate(Screen.HotelSearchResultScreen.route)
+                navController.navigate(Screen.HotelScreen.route + "/" + hotelId)
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
             shape = (RoundedCornerShape(16.dp)),

@@ -1,6 +1,7 @@
 package by.yaugesha.hotelbooking.Admin.Hotel
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -77,12 +78,19 @@ fun HotelCardDescriptionForAdmin(navController: NavController, hotel: Hotel) {
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun HotelSearchResultScreen(navController: NavController) {
+fun HotelSearchResultScreen(navController: NavController, searchParameter: String, show: Int) {
     val vm = AdminViewModel()
-    var hotelList: List<Hotel> = listOf()
-    vm.viewModelScope.launch {hotelList = setHotelList(vm) }
+    var hotelList: MutableList<Hotel> = mutableListOf()
+    when(show) {
+        1 -> vm.viewModelScope.launch { hotelList = searchHotelByLocation(vm, searchParameter).toMutableList() }
+        2 -> vm.viewModelScope.launch { hotelList = searchHotelByItName(vm, searchParameter).toMutableList() }
+        3 -> vm.viewModelScope.launch { hotelList = searchHotelByLocationAndName(vm, searchParameter).toMutableList() }
+        4 -> vm.viewModelScope.launch { hotelList = setHotelList(vm).toMutableList() }
+    }
     val context = LocalContext.current
-    Column( modifier = Modifier.background(BackgroundColor)) {
+    Column( modifier = Modifier
+        .background(BackgroundColor)
+        .fillMaxHeight()) {
         SearchHotelParametersBar(navController)
         Button(
             onClick = {
@@ -152,6 +160,30 @@ suspend fun setHotelList(vm: AdminViewModel): List<Hotel> {
     val result: Deferred<List<Hotel>>
     runBlocking {
         result = async { vm.getHotels() }
+    }
+    return result.await()
+}
+
+suspend fun searchHotelByLocation(vm: AdminViewModel, location: String): List<Hotel> {
+    val result: Deferred<List<Hotel>>
+    runBlocking {
+        result = async { vm.searchHotelsByLocation(location) }
+    }
+    return result.await()
+}
+
+suspend fun searchHotelByItName(vm: AdminViewModel, hotelName: String): List<Hotel> {
+    val result: Deferred<List<Hotel>>
+    runBlocking {
+        result = async { vm.searchHotelByItName(hotelName)!! }
+    }
+    return result.await()
+}
+
+suspend fun searchHotelByLocationAndName(vm: AdminViewModel, searchParameter: String): List<Hotel> {
+    val result: Deferred<List<Hotel>>
+    runBlocking {
+        result = async { vm.searchHotelsByLocationAndName(searchParameter) }
     }
     return result.await()
 }

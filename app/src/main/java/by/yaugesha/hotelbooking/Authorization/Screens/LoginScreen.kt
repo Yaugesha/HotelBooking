@@ -42,8 +42,8 @@ import kotlinx.coroutines.runBlocking
 
 @Composable
 fun LoginScreen(navController: NavController) {
-    val login = rememberSaveable { mutableStateOf("user") }//"admin"user
-    val password = rememberSaveable { mutableStateOf("Useruser01") }//"admin01"Useruser01
+    val login = rememberSaveable { mutableStateOf("admin") }//"admin"user
+    val password = rememberSaveable { mutableStateOf("admin01") }//"admin01"Useruser01
     val context = LocalContext.current
     val vm = AuthViewModel()
 

@@ -33,9 +33,22 @@ fun AdminNavigation(login: String) {
             AdminSearchHotelScreen(navController = navController)
         }*/
         composable(
-            route = Screen.HotelSearchResultScreen.route
-        ) {
-            HotelSearchResultScreen(navController = navController)
+            route = Screen.HotelSearchResultScreen.route + "/{searchParameter}/{show}",
+            arguments = listOf(
+                navArgument("searchParameter") {
+                    type = NavType.StringType
+                }, navArgument("show") {
+                    type = NavType.IntType
+                }
+            )
+        ) { entry ->
+            val searchParameter = entry.arguments?.getString("searchParameter")
+            val show = entry.arguments?.getInt("show")
+            if (searchParameter != null) {
+                if (show != null) {
+                    HotelSearchResultScreen(navController = navController, searchParameter = searchParameter, show = show)
+                }
+            }
         }
         composable(
             route = Screen.AddHotelScreen.route

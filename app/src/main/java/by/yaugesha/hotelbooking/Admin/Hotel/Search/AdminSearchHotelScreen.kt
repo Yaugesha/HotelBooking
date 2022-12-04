@@ -45,7 +45,8 @@ import java.util.*
 @Composable
 fun AdminSearchHotelScreen(navController: NavController) {
     val vm = AdminViewModel()
-    val showSearchHelp = rememberSaveable { mutableStateOf(false) }
+    val showSearchLocationHelp = rememberSaveable { mutableStateOf(false) }
+    val showSearchHotelHelp = rememberSaveable { mutableStateOf(false) }
     val bottomItems =
         listOf(BarItem.Users, BarItem.Hotels, BarItem.UsersBookings, BarItem.AdminProfile)
     Scaffold(
@@ -54,6 +55,8 @@ fun AdminSearchHotelScreen(navController: NavController) {
         val hotelImage = (painterResource(id = R.drawable.stokehotel))
         val location = rememberSaveable { mutableStateOf("") }
         val hotelName = rememberSaveable { mutableStateOf("") }
+        val parameter = rememberSaveable { mutableStateOf(location.value) }
+        val searchConf = rememberSaveable { mutableStateOf(1) }
         Box(modifier = Modifier
             .fillMaxHeight()
             .verticalScroll(rememberScrollState())
@@ -78,7 +81,7 @@ fun AdminSearchHotelScreen(navController: NavController) {
 
                 Column(
                     modifier = Modifier
-                        .padding(/*top = 284.dp, */start = 36.dp, end = 36.dp)
+                        .padding(bottom = 52.dp, start = 36.dp, end = 36.dp)
                         .fillMaxWidth()
                 ) {
                     Spacer(modifier = Modifier.padding(top = 36.dp))
@@ -92,9 +95,9 @@ fun AdminSearchHotelScreen(navController: NavController) {
                     Spacer(modifier = Modifier.padding(top = 8.dp))
 
                     Column {
-                        HotelSearchField(location, showSearchHelp)
-                    if(showSearchHelp.value)
-                        CountryList(state = location, showSearchHelp = showSearchHelp)
+                        HotelSearchField(location, showSearchLocationHelp)
+                        if(showSearchLocationHelp.value)
+                            HelpList(state = location, showSearchHelp = showSearchLocationHelp)
                     }
 
 
@@ -104,15 +107,31 @@ fun AdminSearchHotelScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.padding(top = 8.dp))
 
-                    SearchField(hotelName)
+                    Column {
+                        HotelSearchField(hotelName, showSearchHotelHelp)
+                        if (showSearchHotelHelp.value)
+                            HelpList(state = hotelName, showSearchHelp = showSearchHotelHelp, field = "names")
+                    }
 
                     Spacer(modifier = Modifier.padding(top = 24.dp))
 
-
+                    if(location.value != "" && hotelName.value != "") {
+                        parameter.value = hotelName.value + ", " + location.value
+                        searchConf.value = 3
+                    }
+                    if(location.value == ""){
+                        parameter.value = hotelName.value
+                        searchConf.value = 2
+                    }
+                    if(hotelName.value == ""){
+                        parameter.value = location.value
+                        searchConf.value = 1
+                    }
                     //Edit
                     Button(
                         onClick = {
-                            navController.navigate(Screen.HotelSearchResultScreen.route)
+                            Log.i("config", "Got:  ${searchConf.value}")
+                            navController.navigate(Screen.HotelSearchResultScreen.route + "/" + parameter.value + "/" + searchConf.value)
                         },
                         colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                         shape = (RoundedCornerShape(24.dp)),
@@ -136,7 +155,7 @@ fun AdminSearchHotelScreen(navController: NavController) {
 
                     Button(
                         onClick = {
-                            navController.navigate(Screen.HotelSearchResultScreen.route)
+                            navController.navigate(Screen.HotelSearchResultScreen.route + "/" + "no location" + "/" + 4)
                         },
                         colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                         shape = (RoundedCornerShape(24.dp)),
@@ -169,7 +188,7 @@ fun HotelSearchField(text: MutableState<String>, showSearchHelp: MutableState<Bo
     val keyboardController = LocalSoftwareKeyboardController.current
     OutlinedTextField(
         value = text.value, onValueChange = {text.value = it; showSearchHelp.value = true},
-        placeholder = { Text(text = "Minsk, Belarus", fontSize = 14.sp, color = Color.Black) },
+        placeholder = { Text(text = "Minsk, Belarus", fontSize = 14.sp, color = Color.Black.copy(0.5f)) },
         shape = (RoundedCornerShape(24.dp)),
         singleLine = true,
         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
@@ -183,41 +202,42 @@ fun HotelSearchField(text: MutableState<String>, showSearchHelp: MutableState<Bo
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun CountryList(state: MutableState<String>, showSearchHelp: MutableState<Boolean>) {
+fun HelpList(state: MutableState<String>, showSearchHelp: MutableState<Boolean>, field: String = "location" ) {
     val vm = AdminViewModel()
-    var cities = mutableListOf<String>()  //=getListOfCountries()
-    vm.viewModelScope.launch {cities = setListOfLocations(vm).toMutableList() }
-    var filteredCountries: MutableList<String>
-    var cardSize = 100
-    if(cities.size == 1)
-        cardSize = 52
+    var items = mutableListOf<String>()  //=getListOfCountries()
+    if (field == "location")
+        vm.viewModelScope.launch {items = setListOfLocations(vm).toMutableList() }
+    else
+        vm.viewModelScope.launch {items = setListOfNames(vm).toMutableList() }
+    var filteredItems = mutableListOf<String>()
+    val cardSize = rememberSaveable {mutableStateOf(100)}
     Card(
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(cardSize.dp)
+            .height(cardSize.value.dp)
         ) {
         LazyColumn(modifier = Modifier
             .fillMaxWidth()
-            .height(cardSize.dp)) {
+            .height(cardSize.value.dp)) {
             val searchedText = state.value
-            filteredCountries = if (searchedText.isEmpty()) {
-                cities
+            filteredItems = if (searchedText.isEmpty()) {
+                items
             } else {
                 val resultList = mutableListOf<String>()
-                for (country in cities) {
-                    if (country.lowercase(Locale.getDefault())
+                for (i in items) {
+                    if (i.lowercase(Locale.getDefault())
                             .contains(searchedText.lowercase(Locale.getDefault()))
                     ) {
-                        resultList.add(country)
+                        resultList.add(i)
                     }
                 }
                 resultList
             }
 
-            items(filteredCountries) { filteredCountry ->
-                CountryListItem(
-                    countryText = filteredCountry,
+            items(filteredItems) { filteredItem ->
+                HelpListItem(
+                    countryText = filteredItem,
                     onItemClick = { selectedCountry ->
                         state.value = selectedCountry
                         showSearchHelp.value = false
@@ -229,7 +249,7 @@ fun CountryList(state: MutableState<String>, showSearchHelp: MutableState<Boolea
 }
 
 @Composable
-fun CountryListItem(countryText: String, onItemClick: (String) -> Unit) {
+fun HelpListItem(countryText: String, onItemClick: (String) -> Unit) {
     Row(
         modifier = Modifier
             .clickable(onClick = { onItemClick(countryText) })
@@ -246,6 +266,14 @@ suspend fun setListOfLocations(vm: AdminViewModel): List<String> {
     val result: Deferred<List<String>>
     runBlocking {
         result = async { vm.getListOfCities() }
+    }
+    return result.await()
+}
+
+suspend fun setListOfNames(vm: AdminViewModel): List<String> {
+    val result: Deferred<List<String>>
+    runBlocking {
+        result = async { vm.getListOfHotelNames() }
     }
     return result.await()
 }

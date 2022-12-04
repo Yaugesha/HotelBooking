@@ -240,8 +240,12 @@ class Model {
         return dataBase.child("Hotels").child(hotelId).get().await().getValue<JsonObject>()
     }*/
 
-    suspend fun getListOfHotelsLocation(): HashMap<String, Hotel>? {
-        return dataBase.child("Hotels").get().await().getValue<HashMap<String, Hotel>>()
+
+    suspend fun searchHotelByLocation(city: String): HashMap<String, Hotel>? {
+        return dataBase.child("Hotels").orderByChild("city").equalTo(city).get().await().getValue<HashMap<String, Hotel>>()
     }
 
+    suspend fun searchHotelByItName(hotelName: String): HashMap<String, Hotel>? {
+        return dataBase.child("Hotels").orderByChild("name").equalTo(hotelName).get().await().getValue<HashMap<String, Hotel>>()
+}
 }

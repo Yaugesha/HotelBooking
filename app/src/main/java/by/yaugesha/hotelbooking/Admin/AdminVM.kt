@@ -72,6 +72,58 @@ class AdminViewModel: ViewModel() {
         model.updateHotel(hotel, hotelMap = hotelMap)
     }
 
+    suspend fun searchHotelsByLocation(location: String): List<Hotel> {
+        var city = ""
+        var country = ""
+        val hotelList = mutableListOf<Hotel>()
+        for(i in location.indices){
+            if(location[i] == ',') {
+                city = location.take(i)
+                country = location.removeRange(0..i+1)
+            }
+        }
+        model.searchHotelByLocation(city)?.values!!.forEach {
+            if(it.country == country) {
+                hotelList.add(it)
+            }
+        }
+        return hotelList
+    }
+
+    suspend fun searchHotelByItName(hotelName: String): List<Hotel>? {
+        return model.searchHotelByItName(hotelName)?.values?.toList()
+    }
+
+    suspend fun searchHotelsByLocationAndName(searchParameter: String): List<Hotel> {
+        var location = ""
+        var hotelName = ""
+        Log.i("name+location", "location:  $searchParameter")
+        for(i in searchParameter.indices){
+            if(searchParameter[i] == ',') {
+                hotelName = searchParameter.take(i)
+                Log.i("dividing res", "name: $hotelName location: $searchParameter ")
+                location = searchParameter.removeRange(0..i+1)
+                break
+            }
+        }
+        Log.i("dividing", "location:  $location $hotelName")
+        var city = ""
+        var country = ""
+        val hotelList = mutableListOf<Hotel>()
+        for(i in location.indices){
+            if(location[i] == ',') {
+                city = location.take(i)
+                country = location.removeRange(0..i+1)
+            }
+        }
+        model.searchHotelByLocation(city)?.values!!.forEach {
+            if(it.country == country && it.name == hotelName) {
+                hotelList.add(it)
+            }
+        }
+        return hotelList
+    }
+
 
     /*      Rooms          */
 
@@ -120,10 +172,17 @@ class AdminViewModel: ViewModel() {
     }
 
     suspend fun getListOfCities(): List<String> {
-        val mapOfHotels = model.getListOfHotelsLocation()
+        val mapOfHotels = model.loadListOfHotels()
         val listOfCities = mutableListOf<String>()
-        mapOfHotels?.forEach { listOfCities.add(it.value.city + ", " + it.value.country)}
+        mapOfHotels.forEach { listOfCities.add(it.value.city + ", " + it.value.country)}
         return listOfCities.distinct()
+    }
+
+    suspend fun getListOfHotelNames(): List<String> {
+        val mapOfHotels = model.loadListOfHotels()
+        val listHotelNames = mutableListOf<String>()
+        mapOfHotels.forEach { listHotelNames.add(it.value.name)}
+        return listHotelNames.distinct()
     }
 
 }
