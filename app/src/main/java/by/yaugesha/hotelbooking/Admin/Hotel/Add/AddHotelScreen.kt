@@ -53,6 +53,21 @@ fun AddHotelScreen(navController: NavController) {
     val phoneNumber = rememberSaveable { mutableStateOf("") }
     val checkIn = rememberSaveable { mutableStateOf("Check in") }
     val checkOut = rememberSaveable { mutableStateOf("Check Out") }
+    val mapOfHotelAmenities = rememberSaveable { hashMapOf<String, Boolean>(
+        "Free parking" to false,
+        "Hotel bar" to false,
+        "Spa" to false,
+        "Departure from airport" to false,
+        "Casino" to false,
+        "Swimming pool" to false,
+        "Cribs" to false,
+        "Laundry" to false,
+        "Business services" to false,
+        "Outdoor space" to false,
+        "Wi-fi in lobby" to false,
+        "Restaurant" to false,
+        "Gym" to false
+    ) }
 
     val imageURI = remember{ mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
@@ -113,14 +128,15 @@ fun AddHotelScreen(navController: NavController) {
                 Text(text = "+ Photo", color = Color.Black, fontSize = 14.sp)
         }
         Spacer(modifier = Modifier.padding(top = 20.dp))
-        HotelAmenities()
+        HotelAmenities(mapOfHotelAmenities)
         Spacer(modifier = Modifier.padding(top = 20.dp))
         Button(
             onClick =
             {
                 vm.setHotel (
                     hotelName.value, country.value,  city.value, street.value, building.value,
-                    postCode.value, phoneNumber.value, checkIn.value, checkOut.value, bitmap.value!!
+                    postCode.value, phoneNumber.value, checkIn.value, checkOut.value, bitmap.value!!,
+                    mapOfHotelAmenities
                 )
                 navController.navigate(Screen.AddRoomScreen.route + "/" + vm.getHotelId())
             },
@@ -146,69 +162,77 @@ fun AddHotelScreen(navController: NavController) {
 }
 
 @Composable
-fun HotelAmenities() {
+fun HotelAmenities( mapOfHotelAmenities: HashMap<String, Boolean>) {
     Text(text = "Amenities", fontSize = 16.sp)
     Column{
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            HotelAmenity("Free parking")
-            HotelAmenity("Hotel bar")
-            HotelAmenity("Spa")
+            HotelAmenity("Free parking", mapOfHotelAmenities)
+            HotelAmenity("Hotel bar", mapOfHotelAmenities)
+            HotelAmenity("Spa", mapOfHotelAmenities)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            HotelAmenity("Departure from airport")
-            HotelAmenity("Casino")
+            HotelAmenity("Departure from airport", mapOfHotelAmenities)
+            HotelAmenity("Casino", mapOfHotelAmenities)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            HotelAmenity("Swimming pool")
-            SortAmenities("Cribs")
-            HotelAmenity("Laundry")
+            HotelAmenity("Swimming pool", mapOfHotelAmenities)
+            HotelAmenity("Cribs", mapOfHotelAmenities)
+            HotelAmenity("Laundry", mapOfHotelAmenities)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            HotelAmenity("Business services")
-            HotelAmenity("Outdoor space")
+            HotelAmenity("Business services", mapOfHotelAmenities)
+            HotelAmenity("Outdoor space", mapOfHotelAmenities)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            HotelAmenity("Wi-fi in lobby")
-            HotelAmenity("Restaurant")
-            HotelAmenity("Gym")
+            HotelAmenity("Wi-fi in lobby", mapOfHotelAmenities)
+            HotelAmenity("Restaurant", mapOfHotelAmenities)
+            HotelAmenity("Gym", mapOfHotelAmenities)
         }
     }
 }
 
 @Composable
-fun HotelAmenity(text: String) {
+fun HotelAmenity(text: String,  mapOfHotelAmenities: HashMap<String, Boolean>) {
     val color = remember { mutableStateOf(Color.White) }
     val textColor = remember { mutableStateOf(Color.Black) }
+    if(mapOfHotelAmenities[text] == true){
+        color.value = ButtonColor
+        textColor.value = Color.White
+    }
+    else{
+        color.value = Color.White
+        textColor.value = Color.Black
+    }
     Button(
         onClick = {
             if(color.value == Color.White) {
                 color.value = ButtonColor
                 textColor.value = Color.White
+                mapOfHotelAmenities[text] = true
             }
             else {
                 color.value = Color.White
                 textColor.value = Color.Black
+                mapOfHotelAmenities[text] = false
             }
         },
         colors = ButtonDefaults.buttonColors(backgroundColor = color.value),
-        shape = (RoundedCornerShape(32.dp)),
-//        modifier = Modifier
-//            .
+        shape = (RoundedCornerShape(32.dp))
     ) {
         Text(text = text, fontSize = 12.sp, color = textColor.value)
     }

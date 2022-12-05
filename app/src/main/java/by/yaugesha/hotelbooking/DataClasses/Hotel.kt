@@ -21,7 +21,8 @@ data class Hotel(
     var postCode: String = "",
     var status: String = "blocked",
     var street: String = "",
-    var photoURI: String = ""
+    var photoURI: String = "",
+    var amenities: HashMap<String, Boolean> = hashMapOf()
 ): Parcelable
 
 class HotelType: NavType<Hotel>(isNullableAllowed = false) {

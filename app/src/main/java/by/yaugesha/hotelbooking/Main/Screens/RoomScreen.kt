@@ -31,7 +31,7 @@ import coil.compose.AsyncImage
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun RoomScreen(navController: NavController, room: Room, hotel: Hotel) {
-    //val amenites: Map<String, Boolean> = room.amenities + hotel.am
+    val amenities: Map<String, Boolean> = room.amenities + hotel.amenities
     Scaffold(
         topBar = {
             Card(
@@ -151,7 +151,7 @@ fun RoomScreen(navController: NavController, room: Room, hotel: Hotel) {
             Spacer(Modifier.padding(8.dp))
             Text(text = "Popular amenities", fontSize = 20.sp, modifier = Modifier.padding(start = 18.dp))
             Spacer(Modifier.padding(12.dp))
-            TopAmenities()
+            TopAmenities(amenities)
             Spacer(Modifier.padding(16.dp))
             Text(text = "+ Show all amenities", modifier = Modifier.padding(start = 18.dp))
             Spacer(Modifier.padding(10.dp))
@@ -172,26 +172,26 @@ fun RoomScreen(navController: NavController, room: Room, hotel: Hotel) {
 }
 
 @Composable
-fun TopAmenities(/*amenites: Map<String, Boolean>*/) {
+fun TopAmenities(amenities: Map<String, Boolean>) {
     Row(modifier = Modifier.padding(start = 32.dp)) {
         Column() {
-            TopAmenity(R.drawable.ic_wifi, "Wi-fi in room", true)
+            TopAmenity(R.drawable.ic_wifi, "Wi-fi in room", amenities["Wi-fi in room"]!!)
             Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_ac_unit, "AC unit", false)
+            TopAmenity(R.drawable.ic_ac_unit, "AC unit", amenities["AC unit"]!!)
             Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_smoke_free, "non-smoking", true)
+            TopAmenity(R.drawable.ic_smoke_free, "No smoking", amenities["No smoking"]!!)
             Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_bar, "Bar", true)
+            TopAmenity(R.drawable.ic_bar, "Hotel bar", amenities["Hotel bar"]!!)
         }
         Spacer(modifier = Modifier.padding(end = 80.dp))
         Column(/*modifier = Modifier.padding(start = 24.dp, end = 24.dp)*/) {
-            TopAmenity(R.drawable.ic_parking, "Free parking", true)
+            TopAmenity(R.drawable.ic_parking, "Free parking", amenities["Free parking"]!!)
             Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_pets, "Pets friendly", false)
+            TopAmenity(R.drawable.ic_pets, "Pet friendly", amenities["Pet friendly"]!!)
             Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_gym, "Gym", true)
+            TopAmenity(R.drawable.ic_gym, "Gym", amenities["Gym"]!!)
             Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_restaurant, "Restaurant", true)
+            TopAmenity(R.drawable.ic_restaurant, "Restaurant", amenities["Restaurant"]!!)
         }
     }
 }

@@ -209,7 +209,6 @@ fun RoomAmenity(text: String, mapOfRoomAmenities: HashMap<String, Boolean>) {
         color.value = Color.White
         textColor.value = Color.Black
     }
-
     Button(
         onClick = {
             if(color.value == Color.White) {

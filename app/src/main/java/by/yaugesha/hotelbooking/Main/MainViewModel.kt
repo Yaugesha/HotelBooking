@@ -43,8 +43,8 @@ class MainViewModel: ViewModel() {
         return roomMap.values.toList()
     }
     suspend fun getHotelDataForRoom(hotelId: String): Hotel{
-        val hotel = Hotel()
-        val result: Deferred< HashMap<String, String>>
+        val hotel: Hotel = Hotel()
+        val result: Deferred< HashMap<String, Any>>
         runBlocking {
             result = async { model.getHotelDataForUserSearch(hotelId) }
         }
@@ -61,6 +61,7 @@ class MainViewModel: ViewModel() {
         hotel.city = hotelMap["city"].toString()
         hotel.photoURI = hotelMap["photoURI"].toString()
         hotel.status = hotelMap["status"].toString()
+        hotel.amenities = hotelMap["amenities"] as HashMap<String, Boolean>
         /*val result: Deferred<JsonObject>
         val gson = Gson()
         runBlocking {

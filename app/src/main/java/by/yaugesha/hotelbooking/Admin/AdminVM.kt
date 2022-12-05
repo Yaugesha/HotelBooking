@@ -31,14 +31,15 @@ class AdminViewModel: ViewModel() {
     /*      Hotels          */
 
     fun setHotel(hotelName: String, country: String, city: String, street: String, building: String,
-        postCode: String, phoneNumber: String, checkIn: String, checkOut: String, bitmap: Bitmap)
+        postCode: String, phoneNumber: String, checkIn: String, checkOut: String, bitmap: Bitmap,
+                 mapOfHotelAmenities: HashMap<String, Boolean>)
     {
         val baos = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos)
         val byteArray = baos.toByteArray()
         model.hotel = Hotel(name = hotelName, country = country, city = city, street = street,
             building = building, postCode = postCode, phone = phoneNumber, checkIn = checkIn,
-            checkOut = checkOut, hotelId = UUID.randomUUID().toString())
+            checkOut = checkOut, hotelId = UUID.randomUUID().toString(), amenities = mapOfHotelAmenities)
         model.writeNewHotel(byteArray)
     }
     fun getHotelId(): String {

@@ -50,6 +50,7 @@ fun EditHotelScreen(navController: NavController, hotel: Hotel) {
     val phoneNumber = rememberSaveable { mutableStateOf(hotel.phone) }
     val checkIn = rememberSaveable { mutableStateOf(hotel.checkIn) }
     val checkOut = rememberSaveable { mutableStateOf(hotel.checkOut) }
+    val mapOfHotelAmenities = rememberSaveable { hotel.amenities }
 
     val context = LocalContext.current
     val vm = AdminViewModel()
@@ -110,7 +111,7 @@ fun EditHotelScreen(navController: NavController, hotel: Hotel) {
         }
 
         Spacer(modifier = Modifier.padding(top = 20.dp))
-        HotelAmenities()
+        HotelAmenities(mapOfHotelAmenities)
         Spacer(modifier = Modifier.padding(top = 20.dp))
         Button(
             onClick =
@@ -118,7 +119,7 @@ fun EditHotelScreen(navController: NavController, hotel: Hotel) {
                 val editedHotel = Hotel( hotelId = hotel.hotelId,name = hotelName.value,country = country.value,
                     street = street.value, building = building.value,phone = phoneNumber.value,postCode = postCode.value,
                     checkIn = checkIn.value,checkOut = checkOut.value, city = city.value, photoURI = hotel.photoURI,
-                    status = hotel.status
+                    status = hotel.status, amenities = mapOfHotelAmenities
                 )
                 vm.updateHotel(editedHotel, bitmap.value)
             },

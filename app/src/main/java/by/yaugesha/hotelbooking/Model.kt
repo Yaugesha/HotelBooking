@@ -52,6 +52,7 @@ class Model {
         dataBase.child("Hotels").child(hotel.hotelId).child("checkIn").setValue(hotel.checkIn)
         dataBase.child("Hotels").child(hotel.hotelId).child("checkOut").setValue(hotel.checkOut)
         dataBase.child("Hotels").child(hotel.hotelId).child("status").setValue(hotel.status)
+        dataBase.child("Hotels").child(hotel.hotelId).child("amenities").setValue(hotel.amenities)
         var url: String
         val hotelImagesReference = storageRef.child("Images").child("Hotels").child(hotel.hotelId)
             .child("hotel_" + hotel.hotelId)
@@ -125,6 +126,7 @@ class Model {
                 hotelData.postCode = (it.child("postCode")).value .toString()
                 hotelData.status = it.child("status").value.toString()
                 hotelData.photoURI = it.child("photoURI").value.toString()
+                hotelData.amenities = it.child("amenities").value as HashMap<String, Boolean>
             }.addOnFailureListener {
                 Log.e("firebase", "Error getting data", it)
             }.await() }
@@ -204,6 +206,7 @@ class Model {
 
     fun updateHotel(hotel: Hotel, image: ByteArray? = null, hotelMap: Map<String, Any>) {
         dataBase.child("Hotels").child(hotel.hotelId).updateChildren(hotelMap)
+        dataBase.child("Hotels").child(hotel.hotelId).child("amenities").updateChildren(hotel.amenities as Map<String, Any>)
         var url: String
         val hotelImagesReference = storageRef.child("Images").child("Hotels").child(hotel.hotelId)
             .child("hotel_" + hotel.hotelId)
@@ -231,9 +234,9 @@ class Model {
         return dataBase.child("Rooms").get().await().getValue<HashMap<String, Room>>()!!
     }
 
-    suspend fun getHotelDataForUserSearch(hotelId: String): HashMap<String, String> {
-        var hotelData = HashMap<String, String>()
-        hotelData = dataBase.child("Hotels").child(hotelId).get().await().getValue<Map<String, String>>() as HashMap<String, String>
+    suspend fun getHotelDataForUserSearch(hotelId: String): HashMap<String, Any> {
+        var hotelData = HashMap<String, Any>()
+        hotelData = dataBase.child("Hotels").child(hotelId).get().await().getValue<Map<String, Any>>() as HashMap<String, Any>
         return hotelData
     }
     /*suspend fun getHotelDataForUserSearc(hotelId: String): JsonObject? {
