@@ -1,30 +1,25 @@
 package by.yaugesha.hotelbooking
 
-import android.content.ContentValues.TAG
-import android.util.JsonReader
 import android.util.Log
-import androidx.compose.runtime.MutableState
+import by.yaugesha.hotelbooking.DataClasses.Booking
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.User
-import com.google.android.gms.tasks.Task
 import com.google.firebase.database.*
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
-import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 class Model {
     var user = User()
     var hotel = Hotel()
     var room = Room()
+    var booking = Booking()
 
     private val dataBase: DatabaseReference = FirebaseDatabase.getInstance().reference
     private val storageRef: StorageReference = FirebaseStorage.getInstance().reference
@@ -101,11 +96,25 @@ class Model {
         dataBase.child("Hotels").child(room.hotelID).child("status").setValue("active")
     }
 
+    fun writeNewBooking() {
+        dataBase.child("Bookings").child(booking.id).child("bookingId").setValue(booking.id)
+        dataBase.child("Bookings").child(booking.id).child("user").setValue(booking.user)
+        dataBase.child("Bookings").child(booking.id).child("room").setValue(booking.room)
+        dataBase.child("Bookings").child(booking.id).child("checkInDate").setValue(booking.checkInDate)
+        dataBase.child("Bookings").child(booking.id).child("checkOutDate").setValue(booking.checkOutDate)
+        dataBase.child("Bookings").child(booking.id).child("amountOfRooms").setValue(booking.amountOfRooms)
+        dataBase.child("Bookings").child(booking.id).child("cost").setValue(booking.cost)
+        dataBase.child("Bookings").child(booking.id).child("date").setValue(booking.date.format(DateTimeFormatter.ofLocalizedDate(
+            FormatStyle.SHORT)))
+        //dataBase.child("Rooms").child(booking.room).child("bookings").child(booking.id).setValue(LocalDateTime.now())
+    }
+
     suspend fun loadListOfHotels(): HashMap<String, Hotel> {
         return dataBase.child("Hotels").get().await().getValue<HashMap<String, Hotel>>()!!
     }
 
     suspend fun findRoomsByHotelId(hotelID: String): HashMap<String, Room>? {
+        //Log.i("search pre_res2", "hotels:  ${dataBase.child("Rooms").orderByChild("hotelID").equalTo(hotelID).get().await().getValue<HashMap<String, Room>>()}")
         return dataBase.child("Rooms").orderByChild("hotelID").equalTo(hotelID).get().await().getValue<HashMap<String, Room>>()
     }
 
@@ -251,4 +260,5 @@ class Model {
     suspend fun searchHotelByItName(hotelName: String): HashMap<String, Hotel>? {
         return dataBase.child("Hotels").orderByChild("name").equalTo(hotelName).get().await().getValue<HashMap<String, Hotel>>()
 }
+
 }

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.DatePicker
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,16 +31,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import by.yaugesha.hotelbooking.Admin.Hotel.HelpList
+import by.yaugesha.hotelbooking.Admin.Hotel.HotelSearchField
 import by.yaugesha.hotelbooking.Authorization.ui.theme.AdminCardColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.BarItem
 import by.yaugesha.hotelbooking.DataClasses.BottomBar
 import by.yaugesha.hotelbooking.DataClasses.Screen
+import by.yaugesha.hotelbooking.DataClasses.Search
 import by.yaugesha.hotelbooking.R
+import com.google.gson.Gson
+import java.text.SimpleDateFormat
 import java.util.*
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "SimpleDateFormat")
 @Composable
 fun UserSearchScreen(navController: NavController) {
     val context = LocalContext.current
@@ -74,7 +80,14 @@ fun UserSearchScreen(navController: NavController) {
             ) {
 
                 Button(
-                    onClick = { navController.navigate(Screen.UserSearchResultScreen.route) },
+                    onClick = {
+                        val formatter = SimpleDateFormat("dd.MM.yyyy")
+                        val searchData = Search(location = location.value, checkInDate = formatter.parse(arrivalDate.value)!!,
+                            checkOutDate = formatter.parse(departureDate.value)!!, guests = guests.value.toInt(), rooms = rooms.value.toInt()
+                            )
+                        val searchJson = Uri.encode(Gson().toJson(searchData))
+                        navController.navigate(Screen.UserSearchResultScreen.route + "/" + searchJson.toString())
+                    },
                     colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                     shape = (RoundedCornerShape(24.dp)),
                     modifier = Modifier
@@ -125,11 +138,10 @@ fun ShowDatePicker1(context: Context, arrivalDate: MutableState<String>){
     day = calendar.get(Calendar.DAY_OF_MONTH)
     calendar.time = Date()
 
-    val date = remember { mutableStateOf("Date") }
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            date.value = "$dayOfMonth/${month+1}/$year"
+            arrivalDate.value = "$dayOfMonth.${month+1}.$year"
         }, year, month, day
     )
     Row {
@@ -142,7 +154,6 @@ fun ShowDatePicker1(context: Context, arrivalDate: MutableState<String>){
                 .height(52.dp)
                 .width(124.dp)
         ) {
-            arrivalDate.value = date.value
             Text(text = arrivalDate.value)
         }
     }
@@ -161,11 +172,10 @@ fun ShowDatePicker2(context: Context, departureDate: MutableState<String>){
     day = calendar.get(Calendar.DAY_OF_MONTH)
     calendar.time = Date()
 
-    val date = remember { mutableStateOf("Date") }
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            date.value = "$dayOfMonth/${month+1}/$year"
+            departureDate.value = "$dayOfMonth.${month+1}.$year"
         }, year, month, day
     )
     Row {
@@ -178,7 +188,6 @@ fun ShowDatePicker2(context: Context, departureDate: MutableState<String>){
                 .height(52.dp)
                 .width(126.dp)
         ) {
-            departureDate.value = date.value
             Text(text = departureDate.value)
         }
     }
@@ -250,13 +259,18 @@ fun UsersSearchHotelFields(
     departureDate: MutableState<String>, guests: MutableState<String>, rooms: MutableState<String>
 ) {
     val context = LocalContext.current
+    val showSearchLocationHelp = rememberSaveable { mutableStateOf(false) }
 
     Column(modifier = Modifier.padding(start = 36.dp, end = 36.dp, top = 350.dp)) {
         Text(text = "City", fontSize = 20.sp,)
 
         Spacer(modifier = Modifier.padding(top = 8.dp))
 
-        SearchField(location)
+        Column {
+            HotelSearchField(location, showSearchLocationHelp)
+            if(showSearchLocationHelp.value)
+                HelpList(state = location, showSearchHelp = showSearchLocationHelp)
+        }
 
         Spacer(modifier = Modifier.padding(top = 20.dp))
 

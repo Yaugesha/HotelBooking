@@ -57,7 +57,8 @@ fun AddRoom(navController: NavController, hotelId: String) {
         "Pet friendly" to false,
         "Balcony" to false,
         "No smoking" to false,
-        "Breakfast included" to false
+        "Breakfast included" to false,
+        "Noise isolation" to false
     ) }
 
     Column(
@@ -170,7 +171,7 @@ fun RoomAmenities(mapOfRoomAmenities: HashMap<String, Boolean>) {
         ) {
             RoomAmenity("Kitchen", mapOfRoomAmenities)
             RoomAmenity("Bathroom", mapOfRoomAmenities)
-            RoomAmenity("Wi-fi in room", mapOfRoomAmenities)
+            RoomAmenity("No smoking", mapOfRoomAmenities)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -191,8 +192,13 @@ fun RoomAmenities(mapOfRoomAmenities: HashMap<String, Boolean>) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            RoomAmenity("No smoking", mapOfRoomAmenities)
+            RoomAmenity("Wi-fi in room", mapOfRoomAmenities)
             RoomAmenity("Breakfast included", mapOfRoomAmenities)
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            RoomAmenity("Noise isolation", mapOfRoomAmenities)
         }
     }
 }

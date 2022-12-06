@@ -1,22 +1,30 @@
 package by.yaugesha.hotelbooking.Main.Screens
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -25,12 +33,15 @@ import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.Screen
+import by.yaugesha.hotelbooking.DataClasses.Search
+import by.yaugesha.hotelbooking.Main.SortDialogButton
 import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
+import com.google.gson.Gson
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun RoomScreen(navController: NavController, room: Room, hotel: Hotel) {
+fun RoomScreen(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
     val amenities: Map<String, Boolean> = room.amenities + hotel.amenities
     Scaffold(
         topBar = {
@@ -42,14 +53,21 @@ fun RoomScreen(navController: NavController, room: Room, hotel: Hotel) {
                     .height(62.dp)
             ) {
                 Text(
-                    text = "${hotel.city}, ${hotel.country}\n\n20 dec. - 22 dec.\tGuests: 3, Rooms: 1",
+                    text = "${hotel.city}, ${hotel.country}\n\n${searchData.checkInDate} - " +
+                            "${searchData.checkOutDate}\tGuests: ${searchData.guests}, Rooms: ${searchData.rooms}",
                     color = Color.White, fontSize = 16.sp, textAlign = TextAlign.Center,
                 )
             }
         },
         bottomBar = {
             Button(
-                onClick = { navController.navigate(Screen.OrderScreen.route) },
+                onClick = {
+                    val roomJson = Uri.encode(Gson().toJson(room))
+                    val hotelJson = Uri.encode(Gson().toJson(hotel))
+                    val searchJson = Uri.encode(Gson().toJson(searchData))
+                    navController.navigate(Screen.OrderScreen.route + "/" + roomJson.toString()
+                            + "/" + hotelJson.toString() + "/" + searchJson.toString())
+                },
                 colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                 shape = (RoundedCornerShape(24.dp)),
                 modifier = Modifier
@@ -153,7 +171,12 @@ fun RoomScreen(navController: NavController, room: Room, hotel: Hotel) {
             Spacer(Modifier.padding(12.dp))
             TopAmenities(amenities)
             Spacer(Modifier.padding(16.dp))
-            Text(text = "+ Show all amenities", modifier = Modifier.padding(start = 18.dp))
+            val showAllAmenities = remember { mutableStateOf(false) }
+            Text(text = "+ Show all amenities", textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .padding(start = 18.dp)
+                    .clickable { showAllAmenities.value = true }
+            )
             Spacer(Modifier.padding(10.dp))
             Text("Arrival/Departure", fontSize = 20.sp, fontWeight = Bold, modifier = Modifier.padding(start = 18.dp))
             Text("Check in: ${hotel.checkIn}\nCheck out: ${hotel.checkOut}", fontSize = 20.sp, modifier = Modifier.padding(start = 18.dp))
@@ -166,9 +189,48 @@ fun RoomScreen(navController: NavController, room: Room, hotel: Hotel) {
                     "Tel: ${hotel.phone}", modifier = Modifier.padding(start = 18.dp, end = 18.dp))
             Spacer(Modifier.padding(16.dp))
 
+            if(showAllAmenities.value) {
+                AlertDialog(
+                    onDismissRequest = { showAllAmenities.value = false },
+                    title = {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .padding(start = 8.dp, end = 8.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Text(text = "Amenities")
+                            Column{
+                                amenities.forEach {
+                                    if(it.value){
+                                        Spacer(Modifier.padding(8.dp))
+                                        AmenityDialogField(it.value, it.key)
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    shape = RoundedCornerShape(24.dp),
+                    backgroundColor = Color.White.copy(alpha = 0.8f),
+                    modifier = Modifier.width(216.dp),
+                    buttons = {}
+                )
+            }
         }
     }
 
+}
+
+@Composable
+fun AmenityDialogField(amenityState: Boolean, text: String) {
+    val color = remember { mutableStateOf(Color.White) }
+    val textColor = remember { mutableStateOf(Color.Black) }
+    Card(
+        shape = RoundedCornerShape(32.dp),
+        backgroundColor = color.value,
+    ) {
+        Text(text, fontSize = 16.sp, color = textColor.value, modifier = Modifier.padding(8.dp))
+    }
 }
 
 @Composable

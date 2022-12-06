@@ -2,9 +2,7 @@ package by.yaugesha.hotelbooking.Main
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import by.yaugesha.hotelbooking.DataClasses.Hotel
-import by.yaugesha.hotelbooking.DataClasses.Room
-import by.yaugesha.hotelbooking.DataClasses.User
+import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.Model
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -37,12 +35,32 @@ class MainViewModel: ViewModel() {
         return (password.any { it.isDigit() } && password.any { it.isLetter()} && password.length >= 8 )
     }
 
-    suspend fun getRooms(): List<Room> {
-        val roomMap: HashMap<String, Room> = model.loadListOfRooms()
-        Log.i("hotel list", "Got:  $roomMap")
-        return roomMap.values.toList()
+    suspend fun getRooms(searchData: Search): List<Room> {
+        var city = ""
+        var country = ""
+        val hotelList = mutableListOf<Hotel>()
+        val roomList = mutableListOf<Room>()
+        for(i in searchData.location.indices){
+            if(searchData.location[i] == ',') {
+                city = searchData.location.take(i)
+                country = searchData.location.removeRange(0..i+1)
+            }
+        }
+        Log.i("dividing", "location:  $city $country")
+        model.searchHotelByLocation(city)?.values!!.forEach {
+            if(it.country == country) {
+                hotelList.add(it)
+            }
+        }
+        Log.i("search res1", "hotels:  $hotelList")
+        hotelList.forEach { roomList.addAll(model.findRoomsByHotelId(it.hotelId)?.values!!.toList())}
+        Log.i("search res2", "rooms:  $roomList")
+        roomList.removeIf{ it.peopleCapacity < searchData.guests  }
+        Log.i("search res3", "rooms:  $roomList")
+        return roomList
     }
-    suspend fun getHotelDataForRoom(hotelId: String): Hotel{
+
+    suspend fun getHotelDataForRoom(hotelId: String): Hotel {
         val hotel: Hotel = Hotel()
         val result: Deferred< HashMap<String, Any>>
         runBlocking {
@@ -69,5 +87,10 @@ class MainViewModel: ViewModel() {
         }
         hotel = gson.fromJson(result.await(), Hotel::class.java)*/
         return hotel
+    }
+
+    fun setBooking(booking: Booking) {
+        model.booking = booking
+        model.writeNewBooking()
     }
 }

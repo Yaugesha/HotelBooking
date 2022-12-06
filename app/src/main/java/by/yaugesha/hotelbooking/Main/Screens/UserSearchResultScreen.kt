@@ -31,6 +31,7 @@ import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.Screen
+import by.yaugesha.hotelbooking.DataClasses.Search
 import by.yaugesha.hotelbooking.Main.Screens.SortScreen
 import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
@@ -46,10 +47,10 @@ import java.nio.channels.Channel
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun UserSearchResultScreen(navController: NavController) {
+fun UserSearchResultScreen(navController: NavController, searchData: Search) {
     val vm = MainViewModel()
     var roomList: List<Room> = listOf()
-    vm.viewModelScope.launch {roomList = setRoomList(vm)}
+    vm.viewModelScope.launch {roomList = setRoomList(vm, searchData)}
     Column(modifier = Modifier
         .background(BackgroundColor)
         .fillMaxSize()
@@ -117,7 +118,7 @@ fun UserSearchResultScreen(navController: NavController) {
                             }
                     }
                 }
-                HotelCardDescriptionForUser(navController, roomList[i], hotel.value)
+                HotelCardDescriptionForUser(navController,searchData, roomList[i], hotel.value)
             }
             Spacer(modifier = Modifier.padding(top = 20.dp))
         }
@@ -223,8 +224,8 @@ fun SortDialogButton(openSortDialog: MutableState<Boolean>, text: String) {
 }
 
 @Composable
-fun HotelCardDescriptionForUser(navController: NavController, room: Room, hotel: Hotel) {
-    val nights = 2
+fun HotelCardDescriptionForUser(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
+    val nights = (searchData.checkOutDate.getTime() - searchData.checkInDate.getTime()) / (1000 * 60 * 60 * 24)
 
     Column(
         modifier = Modifier
@@ -256,8 +257,9 @@ fun HotelCardDescriptionForUser(navController: NavController, room: Room, hotel:
                 .clickable {
                     val roomJson = Uri.encode(Gson().toJson(room))
                     val hotelJson = Uri.encode(Gson().toJson(hotel))
+                    val searchJson = Uri.encode(Gson().toJson(searchData))
                     navController.navigate(Screen.RoomScreen.route + "/" + roomJson.toString()
-                            + "/" + hotelJson.toString())
+                            + "/" + hotelJson.toString() + "/" + searchJson.toString())
                 }
         ) {
             Column(modifier = Modifier
@@ -297,10 +299,10 @@ fun HotelCardDescriptionForUser(navController: NavController, room: Room, hotel:
     }
 }
 
-suspend fun setRoomList(vm: MainViewModel): List<Room> {
+suspend fun setRoomList(vm: MainViewModel, searchData: Search): List<Room> {
     val result: Deferred<List<Room>>
     runBlocking {
-        result = async { vm.getRooms() }
+        result = async { vm.getRooms(searchData) }
     }
     return result.await()
 }
