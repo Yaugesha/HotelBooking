@@ -149,12 +149,6 @@ class AdminViewModel: ViewModel() {
         return roomList
     }
 
-    suspend fun getRoomById(roomId: String): Room {
-        val room = model.getRoom(roomId)
-        Log.i("edit room", "Got1:  $room")
-        return room
-    }
-
     fun updateRoom(room: Room, image: Bitmap?) {
         val roomMap = mapOf<String, Any>("roomId" to room.roomId, "hotelID" to room.hotelID, "peopleCapacity" to room.peopleCapacity,
         "price" to room.price, "numberOfRooms" to room.numberOfRooms, "square" to room.square, "amountOfRooms" to room.amountOfRooms,

@@ -43,6 +43,7 @@ import com.google.gson.Gson
 @Composable
 fun RoomScreen(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
     val amenities: Map<String, Boolean> = room.amenities + hotel.amenities
+    val nights = Math.abs(searchData.checkOutDate.getTime() - searchData.checkInDate.getTime()) / (1000 * 60 * 60 * 24)
     Scaffold(
         topBar = {
             Card(
@@ -120,14 +121,14 @@ fun RoomScreen(navController: NavController, searchData: Search, room: Room, hot
             Text(text = "Description", fontSize = 20.sp, modifier = Modifier.padding(start = 18.dp))
             Spacer(modifier = Modifier.padding(12.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .padding(start = 18.dp, end = 18.dp)
                     .fillMaxWidth()
             ) {
                 BedsInRoom(room)
-                //Spacer(Modifier.padding(10.dp))
+                Spacer(Modifier.padding(4.dp))
                 Row( modifier = Modifier.padding(end = 18.dp)) {
                     Text(text = "Square: ${room.square}sqm", fontSize = 16.sp)
                     val favouriteVisible = rememberSaveable { mutableStateOf(false) }
@@ -160,6 +161,14 @@ fun RoomScreen(navController: NavController, searchData: Search, room: Room, hot
                                 contentDescription = "Favorite"
                             )
                         }
+                }
+                Spacer(Modifier.padding(4.dp))
+                Row {
+                    Text(text = "Price: ",fontSize = 20.sp)
+                    Spacer(modifier = Modifier.padding(start = 1.dp))
+                    Text(text = "$",fontSize = 16.sp, modifier = Modifier.padding(start = 6.dp, top = 3.dp))
+                    Spacer(modifier = Modifier.padding(start = 1.dp))
+                    Text(text = "${room.price} per night", fontSize = 20.sp)
                 }
             }
             Divider(color = Color.Black, modifier = Modifier

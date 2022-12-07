@@ -6,14 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.DatePicker
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,10 +27,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import by.yaugesha.hotelbooking.Admin.Hotel.HelpList
 import by.yaugesha.hotelbooking.Admin.Hotel.HotelSearchField
-import by.yaugesha.hotelbooking.Authorization.ui.theme.AdminCardColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.BarItem
@@ -87,6 +82,7 @@ fun UserSearchScreen(navController: NavController) {
                             )
                         val searchJson = Uri.encode(Gson().toJson(searchData))
                         navController.navigate(Screen.UserSearchResultScreen.route + "/" + searchJson.toString())
+
                     },
                     colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                     shape = (RoundedCornerShape(24.dp)),
@@ -117,6 +113,7 @@ fun UserSearchScreen(navController: NavController) {
                     text = "Find hotel as you need with demand.", fontSize = 12.sp,
                     modifier = Modifier.padding(start = 36.dp, top = 64.dp)
                 )
+
             }
             UsersSearchHotelFields(location, arrivalDate, departureDate, guests, rooms)
         }

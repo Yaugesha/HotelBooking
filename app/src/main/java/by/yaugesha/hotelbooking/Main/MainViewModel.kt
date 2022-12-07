@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.math.BigInteger
 import java.security.MessageDigest
+import java.text.SimpleDateFormat
 
 class MainViewModel: ViewModel() {
 
@@ -52,12 +53,57 @@ class MainViewModel: ViewModel() {
                 hotelList.add(it)
             }
         }
-        Log.i("search res1", "hotels:  $hotelList")
+        val formatter = SimpleDateFormat("dd.MM.yyyy")
         hotelList.forEach { roomList.addAll(model.findRoomsByHotelId(it.hotelId)?.values!!.toList())}
-        Log.i("search res2", "rooms:  $roomList")
         roomList.removeIf{ it.peopleCapacity < searchData.guests  }
-        Log.i("search res3", "rooms:  $roomList")
-        return roomList
+        roomList.sortedBy{ it.peopleCapacity }
+        var listOfBookings: List<Booking>
+        var resultRoomList = mutableListOf<Room>()
+        roomList.forEach{ it ->
+            val mapOfRoomBookings = model.findBookingsOFRoom(it.roomId)?.values
+            if(mapOfRoomBookings != null) {
+                listOfBookings = model.findBookingsOFRoom(it.roomId)?.values?.toList()!!// bookings for one room type in hotel
+                var countOfBookings = 0 // count of bookings which date cross search date
+                listOfBookings.forEach{ booking ->
+                    if(!(formatter.parse(booking.checkInDate)?.time!! < searchData.checkInDate.time
+                        && formatter.parse(booking.checkOutDate)?.time!! < searchData.checkInDate.time)) {
+                        if (!(formatter.parse(booking.checkInDate)?.time!! > searchData.checkOutDate.time
+                                    && formatter.parse(booking.checkOutDate)?.time!! > searchData.checkOutDate.time)
+                        )
+                            countOfBookings += booking.amountOfRooms
+                    }
+//                roomList.removeIf { countOfBookings > (it.amountOfRooms - searchData.rooms) }
+                    if(countOfBookings < (it.amountOfRooms - searchData.rooms) && it.amountOfRooms >= searchData.rooms)
+                        resultRoomList.add(it)
+                }
+            }
+            else
+                if(it.amountOfRooms >= searchData.rooms)
+                    resultRoomList.add(it)
+        }
+        return resultRoomList
+    }
+
+    suspend fun checkIfRoomsFree(room: Room, searchData: Search): Boolean {
+        val formatter = SimpleDateFormat("dd.MM.yyyy")
+        Log.i("got value:",  "${room.amountOfRooms < searchData.rooms}")
+        if(room.amountOfRooms < searchData.rooms)
+            return false
+        val listOfBookings = model.findBookingsOFRoom(room.roomId)?.values?.toList()
+        var countOfBookings = 0
+        if(listOfBookings != null) {
+            listOfBookings.forEach{ booking ->
+            if(!(formatter.parse(booking.checkInDate)?.time!! < searchData.checkInDate.time
+                        && formatter.parse(booking.checkOutDate)?.time!! < searchData.checkInDate.time)) {
+                    if (!(formatter.parse(booking.checkInDate)?.time!! > searchData.checkOutDate.time
+                                && formatter.parse(booking.checkOutDate)?.time!! > searchData.checkOutDate.time)
+                    )
+                        countOfBookings += booking.amountOfRooms
+            }
+                return countOfBookings < (room.amountOfRooms - searchData.rooms)
+            }
+        }
+        return true
     }
 
     suspend fun getHotelDataForRoom(hotelId: String): Hotel {
@@ -87,6 +133,34 @@ class MainViewModel: ViewModel() {
         }
         hotel = gson.fromJson(result.await(), Hotel::class.java)*/
         return hotel
+    }
+
+    suspend fun getRoomById(roomId: String): Room {
+        val result: Deferred<HashMap<String, Any>>
+        runBlocking {
+            result = async { model.getRoom(roomId) }
+        }
+        val roomMap = result.await()
+        Log.i("find room", "Got1: $roomId $roomMap ")
+        val room = Room()
+        room.roomId = roomMap["roomId"].toString()
+        room.hotelID = roomMap["hotelID"].toString()
+        Log.i("found room", "Got: ${roomMap["peopleCapacity"]} ")
+        room.peopleCapacity = roomMap["peopleCapacity"].toString().toInt()
+        room.price = roomMap["price"].toString().toInt()
+        room.numberOfRooms = roomMap["numberOfRooms"].toString().toInt()
+        room.square = roomMap["square"].toString().toInt()
+        room.amountOfRooms = roomMap["amountOfRooms"].toString().toInt()
+        room.numberOfDoubleBeds = roomMap["numberOfDoubleBeds"].toString().toInt()
+        room.numberOfSingleBeds = roomMap["numberOfSingleBeds"].toString().toInt()
+        room.photoURI = roomMap["photoURI"].toString()
+        room.status = roomMap["status"].toString()
+        room.amenities = roomMap["amenities"] as HashMap<String, Boolean>
+        return room
+    }
+
+    suspend fun getUserBookings(login: String): List<Booking> {
+        return model.findUserBookings(login)?.values!!.toList()
     }
 
     fun setBooking(booking: Booking) {

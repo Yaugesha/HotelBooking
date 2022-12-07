@@ -1,13 +1,20 @@
 package by.yaugesha.hotelbooking.Main.Screens
 
 import android.annotation.SuppressLint
+import android.app.DatePickerDialog
+import android.content.Context
+import android.util.Log
+import android.widget.DatePicker
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -17,9 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.Booking
@@ -32,12 +41,19 @@ import by.yaugesha.hotelbooking.Main.ShowDatePicker1
 import by.yaugesha.hotelbooking.Main.ShowDatePicker2
 import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.*
+import kotlin.math.abs
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnrememberedMutableState",
-    "SimpleDateFormat"
+    "SimpleDateFormat", "CoroutineCreationDuringComposition"
 )
 @Composable
 fun OrderScreen(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
@@ -48,16 +64,37 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
     val rooms = rememberSaveable { mutableStateOf(searchData.rooms.toString()) }
     val arrivalDate = rememberSaveable { mutableStateOf(formatter.format(searchData.checkInDate)) }
     val departureDate = rememberSaveable { mutableStateOf(formatter.format(searchData.checkOutDate)) }
+    val nights = rememberSaveable { mutableStateOf((abs(formatter.parse(arrivalDate.value)!!.time
+            - formatter.parse(departureDate.value)!!.time) / (1000 * 60 * 60 * 24)).toInt())}
+    val cost = rememberSaveable { mutableStateOf(nights.value * room.price * rooms.value.toInt()) }
+    val checkBookingData = rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         bottomBar = {
             Button(
                 onClick = {
-                    val booking = Booking(id = UUID.randomUUID().toString(), user = "user", room = room.roomId,
-                        checkInDate = arrivalDate.value, checkOutDate = departureDate.value, amountOfRooms = rooms.value.toInt(),
-                        cost = (room.price * ((searchData.checkOutDate.getTime() - searchData.checkInDate.getTime())
-                                / (1000 * 60 * 60 * 24))).toInt(), date = LocalDate.now()
-                    )
-                    vm.setBooking(booking)
+                    vm.viewModelScope.launch {checkBookingData.value = checkBookingData(vm, room, Search
+                        (searchData.location, searchData.guests, formatter.parse(arrivalDate.value)!!,
+                        formatter.parse(departureDate.value)!!, rooms.value.toInt()
+                    ))}
+
+                    Log.i("got value:",  "${checkBookingData.value}")
+                    if(checkBookingData.value == true) {
+                        val booking = Booking(
+                            bookingId = UUID.randomUUID().toString(),
+                            user = "user",
+                            room = room.roomId,
+                            checkInDate = arrivalDate.value,
+                            checkOutDate = departureDate.value,
+                            amountOfRooms = rooms.value.toInt(),
+                            cost = (cost.value),
+                            date = LocalDate.now()
+                                .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+                        )
+                        vm.setBooking(booking)
+                    }
+                    else
+                        Toast.makeText(context, "Your request doesn't match", Toast.LENGTH_LONG).show()
                     /*navController.navigate(Screen.UserSearchResultScreen.route)*/
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
@@ -108,7 +145,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
                         Spacer(modifier = Modifier.padding(4.dp))
 
-                        ShowDatePicker1(context, arrivalDate)
+                        ShowDateChangePicker1(context, arrivalDate, cost, room.price, departureDate,rooms, nights)
                     }
 
                     Spacer(modifier = Modifier.padding(start = 64.dp))
@@ -118,7 +155,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
                         Spacer(modifier = Modifier.padding(4.dp))
 
-                        ShowDatePicker2(context, departureDate)
+                        ShowDateChangePicker2(context, arrivalDate, cost, room.price, departureDate,rooms, nights)
 
                     }
                 }
@@ -127,9 +164,23 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
                 Divider(color = Color.Black, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.padding(10.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        //.padding(start = 18.dp, end = 18.dp)
+                        .fillMaxWidth()
+                ) {
                     BedsInRoom(room)
+                    Spacer(Modifier.padding(4.dp))
                     Text(text = "Square: ${room.square}sqm", fontSize = 16.sp)
+                    Spacer(Modifier.padding(4.dp))
+                    Row {
+                        Text(text = "Cost: ",fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.padding(start = 1.dp))
+                        Text(text = "$",fontSize = 16.sp, modifier = Modifier.padding(start = 6.dp, top = 3.dp))
+                        Spacer(modifier = Modifier.padding(start = 1.dp))
+                        Text(text = "${cost.value}", fontSize = 20.sp)
+                    }
                 }
                 Spacer(Modifier.padding(12.dp))
                 Column {
@@ -137,7 +188,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
                     Spacer(modifier = Modifier.padding(4.dp))
 
-                    LittleNumberInputField(rooms)
+                    RoomsNumberInputField(rooms, cost, nights, room.price)
 
                 }
                 Spacer(Modifier.padding(16.dp))
@@ -195,6 +246,96 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
 }
 
+@Composable
+fun RoomsNumberInputField(value: MutableState<String>, cost: MutableState<Int>, nights: MutableState<Int>, price: Int) {
+    OutlinedTextField(
+        value.value, {
+            value.value = it
+            if(it != null && it != "")
+                cost.value = it.toInt() * price * nights.value},
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        shape = (RoundedCornerShape(24.dp)),
+        singleLine = true,
+        colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
+        modifier = Modifier
+            .height(52.dp)
+            .width(124.dp)
+    )
+}
+
+@Composable
+fun ShowDateChangePicker1(context: Context, arrivalDate: MutableState<String>, cost: MutableState<Int>,
+                          price: Int, departureDate: MutableState<String>, rooms: MutableState<String>,
+                          nights: MutableState<Int>,){
+    val formatter = SimpleDateFormat("dd.MM.yyyy")
+    val year: Int
+    val month: Int
+    val day: Int
+    val calendar = Calendar.getInstance()
+    year = calendar.get(Calendar.YEAR)
+    month = calendar.get(Calendar.MONTH)
+    day = calendar.get(Calendar.DAY_OF_MONTH)
+    calendar.time = Date()
+
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+            arrivalDate.value = "$dayOfMonth.${month+1}.$year"
+            nights.value = (abs(formatter.parse(arrivalDate.value)!!.time
+                    - formatter.parse(departureDate.value)!!.time) / (1000 * 60 * 60 * 24)).toInt()
+            cost.value = nights.value.toInt() * price * rooms.value.toInt()
+        }, year, month, day
+    )
+    Row {
+        Button(
+            onClick = { datePickerDialog.show() },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+            shape = (RoundedCornerShape(24.dp)),
+            modifier = Modifier
+                .height(52.dp)
+                .width(124.dp)
+        ) {
+            Text(text = arrivalDate.value)
+        }
+    }
+}
+
+@Composable
+fun ShowDateChangePicker2(context: Context, arrivalDate: MutableState<String>, cost: MutableState<Int>,
+                          price: Int, departureDate: MutableState<String>, rooms: MutableState<String>,
+                          nights: MutableState<Int>,){
+    val formatter = SimpleDateFormat("dd.MM.yyyy")
+    val year: Int
+    val month: Int
+    val day: Int
+    val calendar = Calendar.getInstance()
+    year = calendar.get(Calendar.YEAR)
+    month = calendar.get(Calendar.MONTH)
+    day = calendar.get(Calendar.DAY_OF_MONTH)
+    calendar.time = Date()
+
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+            departureDate.value = "$dayOfMonth.${month+1}.$year"
+            nights.value = (abs(formatter.parse(arrivalDate.value)!!.time
+                    - formatter.parse(departureDate.value)!!.time) / (1000 * 60 * 60 * 24)).toInt()
+            cost.value = nights.value.toInt() * price * rooms.value.toInt()
+        }, year, month, day
+    )
+    Row {
+        Button(
+            onClick = { datePickerDialog.show() },
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+            shape = (RoundedCornerShape(24.dp)),
+            modifier = Modifier
+                .height(52.dp)
+                .width(124.dp)
+        ) {
+            Text(text = departureDate.value)
+        }
+    }
+}
 
 @Composable
 fun TopAmenitiesInOrder(amenities: Map<String, Boolean>) {
@@ -219,4 +360,12 @@ fun TopAmenitiesInOrder(amenities: Map<String, Boolean>) {
             TopAmenity(R.drawable.ic_restaurant, "Restaurant", amenities["Restaurant"]!!)
         }
     }
+}
+
+suspend fun checkBookingData(vm: MainViewModel, room: Room, searchData: Search): Boolean {
+    val result: Deferred<Boolean>
+    runBlocking {
+        result = async { vm.checkIfRoomsFree(room, searchData)}
+    }
+    return result.await()
 }

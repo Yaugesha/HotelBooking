@@ -97,16 +97,24 @@ class Model {
     }
 
     fun writeNewBooking() {
-        dataBase.child("Bookings").child(booking.id).child("bookingId").setValue(booking.id)
-        dataBase.child("Bookings").child(booking.id).child("user").setValue(booking.user)
-        dataBase.child("Bookings").child(booking.id).child("room").setValue(booking.room)
-        dataBase.child("Bookings").child(booking.id).child("checkInDate").setValue(booking.checkInDate)
-        dataBase.child("Bookings").child(booking.id).child("checkOutDate").setValue(booking.checkOutDate)
-        dataBase.child("Bookings").child(booking.id).child("amountOfRooms").setValue(booking.amountOfRooms)
-        dataBase.child("Bookings").child(booking.id).child("cost").setValue(booking.cost)
-        dataBase.child("Bookings").child(booking.id).child("date").setValue(booking.date.format(DateTimeFormatter.ofLocalizedDate(
-            FormatStyle.SHORT)))
+        dataBase.child("Bookings").child(booking.bookingId).child("bookingId").setValue(booking.bookingId)
+        dataBase.child("Bookings").child(booking.bookingId).child("user").setValue(booking.user)
+        dataBase.child("Bookings").child(booking.bookingId).child("room").setValue(booking.room)
+        dataBase.child("Bookings").child(booking.bookingId).child("checkInDate").setValue(booking.checkInDate)
+        dataBase.child("Bookings").child(booking.bookingId).child("checkOutDate").setValue(booking.checkOutDate)
+        dataBase.child("Bookings").child(booking.bookingId).child("amountOfRooms").setValue(booking.amountOfRooms)
+        dataBase.child("Bookings").child(booking.bookingId).child("cost").setValue(booking.cost)
+        dataBase.child("Bookings").child(booking.bookingId).child("date").setValue(booking.date/*.format(DateTimeFormatter.ofLocalizedDate(
+            FormatStyle.SHORT))*/)
         //dataBase.child("Rooms").child(booking.room).child("bookings").child(booking.id).setValue(LocalDateTime.now())
+    }
+
+    suspend fun findBookingsOFRoom(roomId: String): HashMap<String, Booking>? {
+        return dataBase.child("Bookings").orderByChild("room").equalTo(roomId).get().await().getValue<HashMap<String, Booking>>()
+    }
+
+    suspend fun findUserBookings(login: String): HashMap<String, Booking>? {
+        return dataBase.child("Bookings").orderByChild("user").equalTo(login).get().await().getValue<HashMap<String, Booking>>()
     }
 
     suspend fun loadListOfHotels(): HashMap<String, Hotel> {
@@ -142,8 +150,8 @@ class Model {
         return hotelData
     }
 
-    suspend fun getRoom(roomId: String): Room {
-        val roomData = room
+    suspend fun getRoom(roomId: String): HashMap<String, Any>/*Room*/ {
+       /* val roomData = room
         runBlocking {
             dataBase.child("Rooms").child(roomId).get().addOnSuccessListener{
                 Log.i("firebase", "Got value ${it.value}")
@@ -162,7 +170,8 @@ class Model {
             }.addOnFailureListener {
                 Log.e("firebase", "Error getting data", it)
             }.await() }
-        return roomData
+        return roomData*/
+        return dataBase.child("Rooms").child(roomId).get().await().getValue<HashMap<String, Any>>()  as HashMap<String, Any>
     }
 
     fun getUserData(login: String): User {

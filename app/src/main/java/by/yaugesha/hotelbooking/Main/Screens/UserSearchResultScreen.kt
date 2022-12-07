@@ -1,49 +1,37 @@
 package by.yaugesha.hotelbooking.Main
 
 import android.annotation.SuppressLint
-import android.net.Uri
-import android.util.Log
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import android.net.Uri
+import android.util.Log
+import androidx.compose.foundation.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
-import by.yaugesha.hotelbooking.Admin.AdminViewModel
-import by.yaugesha.hotelbooking.Admin.Hotel.setHotelList
-import by.yaugesha.hotelbooking.Authorization.ui.theme.AdminCardColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.Screen
 import by.yaugesha.hotelbooking.DataClasses.Search
-import by.yaugesha.hotelbooking.Main.Screens.SortScreen
 import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
-import com.androidpoet.dropdown.Dropdown
-import com.androidpoet.dropdown.MenuItem
-import com.androidpoet.dropdown.dropDownMenu
-import com.androidpoet.dropdown.dropDownMenuColors
 import com.google.gson.Gson
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel.Factory.CONFLATED
-import okhttp3.internal.wait
-import java.nio.channels.Channel
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
@@ -225,7 +213,7 @@ fun SortDialogButton(openSortDialog: MutableState<Boolean>, text: String) {
 
 @Composable
 fun HotelCardDescriptionForUser(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
-    val nights = (searchData.checkOutDate.getTime() - searchData.checkInDate.getTime()) / (1000 * 60 * 60 * 24)
+    val nights = Math.abs(searchData.checkOutDate.getTime() - searchData.checkInDate.getTime()) / (1000 * 60 * 60 * 24)
 
     Column(
         modifier = Modifier

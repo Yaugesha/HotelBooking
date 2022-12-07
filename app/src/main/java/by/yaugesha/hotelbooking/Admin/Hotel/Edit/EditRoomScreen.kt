@@ -164,10 +164,11 @@ fun EditRoomScreen(navController: NavController, room: Room) {
 }
 
 
+/*
 suspend fun getRoom(vm: AdminViewModel, roomId: String): Room {
     val result: Deferred<Room>
     runBlocking {
         result = async { vm.getRoomById(roomId) }
     }
     return result.await()
-}
+}*/
