@@ -43,72 +43,54 @@ fun UserSearchResultScreen(navController: NavController, searchData: Search) {
         .background(BackgroundColor)
         .fillMaxSize()
         .verticalScroll(rememberScrollState())) {
-        SearchHotelParametersBar(navController)
-        Spacer(modifier = Modifier.padding(top = 36.dp))
-        for (i in roomList.indices) {
-            val hotel = rememberSaveable { mutableStateOf(Hotel()) }
-            vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, roomList[i].hotelID)}
-            Log.i("Hotel", hotel.toString())
-            Card(
-                shape = (RoundedCornerShape(24.dp)),
-                backgroundColor = Color.White,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentWidth(Alignment.CenterHorizontally)
-                    .height(160.dp)
-                    .width(360.dp)
-            ) {
-                Box {
-                    Card(
-                        modifier = Modifier
-                            .wrapContentWidth(Alignment.Start)
-                            .height(180.dp)
-                            .width(140.dp)
-                            .fillMaxHeight()){
-                        AsyncImage( //height(513.dp).width(396.dp)
-                            model = hotel.value.photoURI, contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.clip(RoundedCornerShape(24.dp))
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .wrapContentHeight(Alignment.Top)
-                            .padding(top = 8.dp, start = 96.dp)
-                    ) {
-                        val favouriteVisible = rememberSaveable { mutableStateOf(false) }
-
-                        if (favouriteVisible.value) {
-                            IconButton(
-                                onClick = { favouriteVisible.value = !favouriteVisible.value },
-                                modifier = Modifier
-                                    .height(24.dp)
-                                    .width(24.dp)
-                            ) {
-                                Icon(
-                                    painterResource(R.drawable.ic_heart_red),
-                                    contentDescription = "Favorite",
-                                    tint = Color.Red
-                                )
-                            }
-                        } else
-                            IconButton(
-                                onClick = { favouriteVisible.value = !favouriteVisible.value },
-                                modifier = Modifier
-                                    .height(24.dp)
-                                    .width(24.dp)
-                            ) {
-                                Icon(
-                                    painterResource(R.drawable.ic_favorite),
-                                    contentDescription = "Favorite"
-                                )
-
-                            }
-                    }
-                }
-                HotelCardDescriptionForUser(navController,searchData, roomList[i], hotel.value)
+        if(roomList.isEmpty()){
+            Row(modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)) {
+                Text(
+                    text = "No rooms found", fontSize = 40.sp,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                        /*.wrapContentWidth(Alignment.CenterHorizontally)*/
+                        .wrapContentHeight(Alignment.CenterVertically)
+                )
             }
-            Spacer(modifier = Modifier.padding(top = 20.dp))
+
+        }
+        else{
+            SearchHotelParametersBar(navController)
+            Spacer(modifier = Modifier.padding(top = 36.dp))
+            for (i in roomList.indices) {
+                val hotel = rememberSaveable { mutableStateOf(Hotel()) }
+                vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, roomList[i].hotelID)}
+                Log.i("Hotel", hotel.toString())
+                Card(
+                    shape = (RoundedCornerShape(24.dp)),
+                    backgroundColor = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                        .height(160.dp)
+                        .width(360.dp)
+                ) {
+                    Box {
+                        Card(
+                            modifier = Modifier
+                                .wrapContentWidth(Alignment.Start)
+                                .height(180.dp)
+                                .width(140.dp)
+                                .fillMaxHeight()){
+                            AsyncImage( //height(513.dp).width(396.dp)
+                                model = hotel.value.photoURI, contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.clip(RoundedCornerShape(24.dp))
+                            )
+                        }
+                        FavoriteButton()
+                    }
+                    HotelCardDescriptionForUser(navController,searchData, roomList[i], hotel.value)
+                }
+                Spacer(modifier = Modifier.padding(top = 20.dp))
+            }
         }
     }
 }
@@ -246,8 +228,10 @@ fun HotelCardDescriptionForUser(navController: NavController, searchData: Search
                     val roomJson = Uri.encode(Gson().toJson(room))
                     val hotelJson = Uri.encode(Gson().toJson(hotel))
                     val searchJson = Uri.encode(Gson().toJson(searchData))
-                    navController.navigate(Screen.RoomScreen.route + "/" + roomJson.toString()
-                            + "/" + hotelJson.toString() + "/" + searchJson.toString())
+                    navController.navigate(
+                        Screen.RoomScreen.route + "/" + roomJson.toString()
+                                + "/" + hotelJson.toString() + "/" + searchJson.toString()
+                    )
                 }
         ) {
             Column(modifier = Modifier

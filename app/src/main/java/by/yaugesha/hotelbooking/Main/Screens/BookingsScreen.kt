@@ -46,86 +46,113 @@ fun BookingsScreen(navController: NavController) {
     val vm = MainViewModel()
     var bookingsList: List<Booking> = listOf()
     vm.viewModelScope.launch {bookingsList = setListOfUserBookings(vm, "user")}
+    Log.i("got UserBookings:",  "$bookingsList")
 
     val bottomItems = listOf(BarItem.Search, BarItem.Favorites, BarItem.Bookings, BarItem.Profile)
-    Scaffold(
-        bottomBar = { BottomBar(navController, bottomItems) }
-    ) {
-        BookingsParametersBar(navController)
-        Column(
-            modifier = Modifier
-                .padding(top = 120.dp, bottom = 68.dp)
-                .verticalScroll(rememberScrollState())
+        Scaffold(
+            bottomBar = { BottomBar(navController, bottomItems) }
         ) {
-            for (i in bookingsList.indices) {
-                var room = Room()
-                vm.viewModelScope.launch { room = getBookingRoom(vm, bookingsList[i].room) }
-                Log.i("got room:", room.toString())
-                val hotel = rememberSaveable { mutableStateOf(Hotel()) }
-                vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, room.hotelID) }
-                Card(
-                    shape = (RoundedCornerShape(24.dp)),
-                    backgroundColor = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally)
-                        .height(180.dp)
-                        .width(360.dp)
+            if (bookingsList.isEmpty()) {
+                Row(
+                    modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)
                 ) {
-                    Box {
+                    Text(
+                        text = "No rooms found", fontSize = 40.sp,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(Alignment.Center)
+                            /*.wrapContentWidth(Alignment.CenterHorizontally)*/
+                            .wrapContentHeight(Alignment.CenterVertically)
+                    )
+                }
+            } else {
+                BookingsParametersBar(navController)
+                Column(
+                    modifier = Modifier
+                        .padding(top = 120.dp, bottom = 68.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    for (i in bookingsList.indices) {
+                        var room = Room()
+                        vm.viewModelScope.launch { room = getBookingRoom(vm, bookingsList[i].room) }
+                        Log.i("got room:", room.toString())
+                        val hotel = rememberSaveable { mutableStateOf(Hotel()) }
+                        vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, room.hotelID) }
                         Card(
+                            shape = (RoundedCornerShape(24.dp)),
+                            backgroundColor = Color.White,
                             modifier = Modifier
-                                .wrapContentWidth(Alignment.Start)
+                                .fillMaxWidth()
+                                .wrapContentWidth(Alignment.CenterHorizontally)
                                 .height(180.dp)
-                                .width(140.dp)
-                                .fillMaxHeight()){
-                            AsyncImage( //height(513.dp).width(396.dp)
-                                model = hotel.value.photoURI, contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.clip(RoundedCornerShape(24.dp))
+                                .width(360.dp)
+                        ) {
+                            Box {
+                                Card(
+                                    modifier = Modifier
+                                        .wrapContentWidth(Alignment.Start)
+                                        .height(180.dp)
+                                        .width(140.dp)
+                                        .fillMaxHeight()
+                                ) {
+                                    AsyncImage( //height(513.dp).width(396.dp)
+                                        model = hotel.value.photoURI, contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.clip(RoundedCornerShape(24.dp))
+                                    )
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .wrapContentHeight(Alignment.Top)
+                                        .padding(top = 8.dp, start = 96.dp)
+                                ) {
+                                    val favouriteVisible =
+                                        rememberSaveable { mutableStateOf(false) }
+
+                                    if (favouriteVisible.value) {
+                                        IconButton(
+                                            onClick = {
+                                                favouriteVisible.value = !favouriteVisible.value
+                                            },
+                                            modifier = Modifier
+                                                .height(24.dp)
+                                                .width(24.dp)
+                                        ) {
+                                            Icon(
+                                                painterResource(R.drawable.ic_heart_red),
+                                                contentDescription = "Favorite",
+                                                tint = Color.Red
+                                            )
+                                        }
+                                    } else
+                                        IconButton(
+                                            onClick = {
+                                                favouriteVisible.value = !favouriteVisible.value
+                                            },
+                                            modifier = Modifier
+                                                .height(24.dp)
+                                                .width(24.dp)
+                                        ) {
+                                            Icon(
+                                                painterResource(R.drawable.ic_favorite),
+                                                contentDescription = "Favorite"
+                                            )
+
+                                        }
+                                }
+                            }
+                            BookingDescriptionCard(
+                                navController,
+                                bookingsList[i],
+                                room,
+                                hotel.value
                             )
                         }
-                        Row(
-                            modifier = Modifier
-                                .wrapContentHeight(Alignment.Top)
-                                .padding(top = 8.dp, start = 96.dp)
-                        ) {
-                            val favouriteVisible = rememberSaveable { mutableStateOf(false) }
-
-                            if (favouriteVisible.value) {
-                                IconButton(
-                                    onClick = { favouriteVisible.value = !favouriteVisible.value },
-                                    modifier = Modifier
-                                        .height(24.dp)
-                                        .width(24.dp)
-                                ) {
-                                    Icon(
-                                        painterResource(R.drawable.ic_heart_red),
-                                        contentDescription = "Favorite",
-                                        tint = Color.Red
-                                    )
-                                }
-                            } else
-                                IconButton(
-                                    onClick = { favouriteVisible.value = !favouriteVisible.value },
-                                    modifier = Modifier
-                                        .height(24.dp)
-                                        .width(24.dp)
-                                ) {
-                                    Icon(
-                                        painterResource(R.drawable.ic_favorite),
-                                        contentDescription = "Favorite"
-                                    )
-
-                                }
-                        }
+                        Spacer(modifier = Modifier.padding(top = 20.dp))
                     }
-                    BookingDescriptionCard(navController, bookingsList[i], room, hotel.value)
                 }
-                Spacer(modifier = Modifier.padding(top = 20.dp))
             }
         }
-    }
 }
 
 @Composable
@@ -212,12 +239,9 @@ fun BookingDescriptionCard(navController: NavController, booking: Booking, room:
                     val formatter = SimpleDateFormat("dd.MM.yyyy")
                     val roomJson = Uri.encode(Gson().toJson(room))
                     val hotelJson = Uri.encode(Gson().toJson(hotel))
-                    val searchJson = Uri.encode(Gson().toJson(Search(rooms = booking.amountOfRooms,
-                        checkInDate = formatter.parse(booking.checkInDate)!!,
-                        checkOutDate = formatter.parse(booking.checkOutDate)!!
-                    )))
-                    navController.navigate(Screen.OrderScreen.route + "/" + roomJson.toString()
-                            + "/" + hotelJson.toString() + "/" + searchJson.toString())
+                    val bookingJson = Uri.encode(Gson().toJson(booking))
+                    navController.navigate(Screen.EditBookingScreen.route + "/" + roomJson.toString()
+                            + "/" + hotelJson.toString() + "/" + bookingJson.toString())
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                 shape = (RoundedCornerShape(16.dp)),

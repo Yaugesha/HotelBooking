@@ -106,6 +106,35 @@ class MainViewModel: ViewModel() {
         return true
     }
 
+    suspend fun checkBookingEdition(room: Room, newBooking: Booking): Boolean {
+        val formatter = SimpleDateFormat("dd.MM.yyyy")
+        Log.i("got value:",  "${room.amountOfRooms < newBooking.amountOfRooms}")
+        if(room.amountOfRooms < newBooking.amountOfRooms)
+            return false
+        val listOfBookings = model.findBookingsOFRoom(room.roomId)?.values?.toList()
+        var countOfBookings = 0
+        if(listOfBookings != null) {
+            listOfBookings.forEach{ booking ->
+                if(booking.user != newBooking.user) {
+                    if (!(formatter.parse(booking.checkInDate)?.time!! < formatter.parse(newBooking.checkInDate)?.time!!
+                                && formatter.parse(booking.checkOutDate)?.time!! < formatter.parse(newBooking.checkInDate)?.time!!)
+                    ) {
+                        if (!(formatter.parse(booking.checkInDate)?.time!! > formatter.parse(newBooking.checkOutDate)?.time!!
+                                && formatter.parse(booking.checkOutDate)?.time!! > formatter.parse(newBooking.checkOutDate)?.time!!)
+                        )
+                            countOfBookings += booking.amountOfRooms
+                    }
+                    return countOfBookings < (room.amountOfRooms - newBooking.amountOfRooms)
+                }
+            }
+        }
+        return true
+    }
+
+    fun deleteBooking(bookingId: String){
+        model.deleteBooking(bookingId)
+    }
+
     suspend fun getHotelDataForRoom(hotelId: String): Hotel {
         val hotel: Hotel = Hotel()
         val result: Deferred< HashMap<String, Any>>
@@ -126,12 +155,6 @@ class MainViewModel: ViewModel() {
         hotel.photoURI = hotelMap["photoURI"].toString()
         hotel.status = hotelMap["status"].toString()
         hotel.amenities = hotelMap["amenities"] as HashMap<String, Boolean>
-        /*val result: Deferred<JsonObject>
-        val gson = Gson()
-        runBlocking {
-            result = async { model.getHotelDataForUserSearc(hotelId)!!}
-        }
-        hotel = gson.fromJson(result.await(), Hotel::class.java)*/
         return hotel
     }
 
@@ -160,7 +183,9 @@ class MainViewModel: ViewModel() {
     }
 
     suspend fun getUserBookings(login: String): List<Booking> {
-        return model.findUserBookings(login)?.values!!.toList()
+        val listOfBookings = model.findUserBookings(login)?.values ?: return listOf<Booking>()
+        Log.i("got UserBookings:",  "${listOfBookings.toList()}")
+        return listOfBookings.toList()
     }
 
     fun setBooking(booking: Booking) {

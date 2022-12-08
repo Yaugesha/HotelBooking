@@ -38,6 +38,8 @@ import by.yaugesha.hotelbooking.DataClasses.Search
 import by.yaugesha.hotelbooking.R
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.*
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "SimpleDateFormat")
@@ -52,6 +54,7 @@ fun UserSearchScreen(navController: NavController) {
     val departureDate = rememberSaveable { mutableStateOf("Date") }
     val guests = rememberSaveable { mutableStateOf("") }
     val rooms = rememberSaveable { mutableStateOf("") }
+    val formatter = SimpleDateFormat("dd.MM.yyyy")
 
     Scaffold(
         bottomBar = { BottomBar(navController, bottomItems) }
@@ -76,7 +79,6 @@ fun UserSearchScreen(navController: NavController) {
 
                 Button(
                     onClick = {
-                        val formatter = SimpleDateFormat("dd.MM.yyyy")
                         val searchData = Search(location = location.value, checkInDate = formatter.parse(arrivalDate.value)!!,
                             checkOutDate = formatter.parse(departureDate.value)!!, guests = guests.value.toInt(), rooms = rooms.value.toInt()
                             )
@@ -84,6 +86,10 @@ fun UserSearchScreen(navController: NavController) {
                         navController.navigate(Screen.UserSearchResultScreen.route + "/" + searchJson.toString())
 
                     },
+                    enabled = arrivalDate.value != "Date" && departureDate.value != "Date" &&
+                        (location.value.isNotEmpty() &&  guests.value.isNotEmpty() && rooms.value.isNotEmpty() &&
+                        (formatter.parse(departureDate.value)!! >= formatter.parse(arrivalDate.value)!! ||
+                        Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()) <= formatter.parse(arrivalDate.value)!!)),
                     colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                     shape = (RoundedCornerShape(24.dp)),
                     modifier = Modifier
@@ -291,7 +297,13 @@ fun UsersSearchHotelFields(
 
             }
         }
-        //if date incorrect...
+        val formatter = SimpleDateFormat("dd.MM.yyyy")
+
+        if(arrivalDate.value != "Date" && departureDate.value != "Date" &&
+            (formatter.parse(departureDate.value)!! <= formatter.parse(arrivalDate.value)!! ||
+            Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()) > formatter.parse(arrivalDate.value)!!)) {
+                Text(text = "Incorrect date input", color = Color.Red)
+        }
 
         Spacer(modifier = Modifier.padding(top = 20.dp))
 

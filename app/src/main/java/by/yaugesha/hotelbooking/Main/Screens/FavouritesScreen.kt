@@ -1,12 +1,10 @@
 package by.yaugesha.hotelbooking.Main
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -54,39 +52,7 @@ fun FavoritesScreen(navController: NavController) {
                             modifier = Modifier
                                 .wrapContentWidth(Alignment.Start)
                         )
-                        Row(modifier = Modifier
-                            .wrapContentHeight(Alignment.Top)
-                            .padding(top = 8.dp, start = 96.dp)
-                        ) {
-                            val favouriteVisible = rememberSaveable { mutableStateOf(false) }
-
-                            if (favouriteVisible.value) {
-                                IconButton(
-                                    onClick = { favouriteVisible.value = !favouriteVisible.value },
-                                    modifier = Modifier
-                                        .height(24.dp)
-                                        .width(24.dp)
-                                ) {
-                                    Icon(
-                                        painterResource(R.drawable.ic_heart_red),
-                                        contentDescription = "Favorite",
-                                        tint = Color.Red
-                                    )
-                                }
-                            } else
-                                IconButton(
-                                    onClick = { favouriteVisible.value = !favouriteVisible.value },
-                                    modifier = Modifier
-                                        .height(24.dp)
-                                        .width(24.dp)
-                                ) {
-                                    Icon(
-                                        painterResource(R.drawable.ic_favorite),
-                                        contentDescription = "Favorite"
-                                    )
-
-                                }
-                        }
+                        FavoriteButton()
                     }
 
                     FavouriteHotelCardDescription(navController)
@@ -185,6 +151,48 @@ fun FavouriteHotelCardDescription(navController: NavController) {
                     modifier = Modifier
                         .padding(start = 8.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun FavoriteButton() {
+    Row(modifier = Modifier
+        .wrapContentHeight(Alignment.Top)
+        .padding(top = 8.dp, start = 96.dp)
+    ) {
+        val favouriteVisible = rememberSaveable { mutableStateOf(false) }
+
+        if (favouriteVisible.value) {
+            IconButton(
+                onClick = { favouriteVisible.value = !favouriteVisible.value },
+                modifier = Modifier
+                    .background(Color.White.copy(0.4f), CircleShape)
+                    .height(28.dp)
+                    .width(28.dp)
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_heart_red),
+                    contentDescription = "Favorite",
+                    tint = Color.Red
+                )
+            }
+        } else {
+            IconButton(
+                onClick = {
+                    favouriteVisible.value = !favouriteVisible.value
+                },
+                modifier = Modifier
+                    .background(Color.White.copy(0.4f), CircleShape)
+                    .height(28.dp)
+                    .width(28.dp)
+            ) {
+                Icon(
+                    painterResource(R.drawable.ic_favorite),
+                    contentDescription = "Favorite"
+                )
+
             }
         }
     }

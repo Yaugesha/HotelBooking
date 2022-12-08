@@ -1,6 +1,7 @@
 package by.yaugesha.hotelbooking.Main.Screens
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Context
 import android.util.Log
@@ -35,10 +36,7 @@ import by.yaugesha.hotelbooking.DataClasses.Booking
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.Search
-import by.yaugesha.hotelbooking.Main.LittleNumberInputField
-import by.yaugesha.hotelbooking.Main.MainViewModel
-import by.yaugesha.hotelbooking.Main.ShowDatePicker1
-import by.yaugesha.hotelbooking.Main.ShowDatePicker2
+import by.yaugesha.hotelbooking.Main.*
 import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
 import kotlinx.coroutines.Deferred
@@ -56,56 +54,116 @@ import kotlin.math.abs
     "SimpleDateFormat", "CoroutineCreationDuringComposition"
 )
 @Composable
-fun OrderScreen(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
+fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, booking: Booking) {
     val amenities: Map<String, Boolean> = room.amenities + hotel.amenities
     val context = LocalContext.current
     val vm = MainViewModel()
     val formatter = SimpleDateFormat("dd.MM.yyyy")
-    val rooms = rememberSaveable { mutableStateOf(searchData.rooms.toString()) }
-    val arrivalDate = rememberSaveable { mutableStateOf(formatter.format(searchData.checkInDate)) }
-    val departureDate = rememberSaveable { mutableStateOf(formatter.format(searchData.checkOutDate)) }
-    val nights = rememberSaveable { mutableStateOf((abs(formatter.parse(arrivalDate.value)!!.time
+    val amountOfRooms = remember { mutableStateOf(booking.amountOfRooms.toString()) }
+    val arrivalDate = remember { mutableStateOf(booking.checkInDate) }
+    val departureDate = remember { mutableStateOf(booking.checkOutDate) }
+    val nights = remember { mutableStateOf((abs(formatter.parse(arrivalDate.value)!!.time
             - formatter.parse(departureDate.value)!!.time) / (1000 * 60 * 60 * 24)).toInt())}
-    val cost = rememberSaveable { mutableStateOf(nights.value * room.price * rooms.value.toInt()) }
-    val checkBookingData = rememberSaveable { mutableStateOf(false) }
+    val cost = remember { mutableStateOf(nights.value * room.price * amountOfRooms.value.toInt()) }
+    var oldBooking = booking.bookingId
+    val checkBookingData = remember { mutableStateOf(false) }
+    val openDeleteDialog = remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
-            Button(
-                onClick = {
-                    vm.viewModelScope.launch {checkBookingData.value = checkBookingData(vm, room, Search
-                        (searchData.location, searchData.guests, formatter.parse(arrivalDate.value)!!,
-                        formatter.parse(departureDate.value)!!, rooms.value.toInt()
-                    ))}
-
-                    Log.i("got value:",  "${checkBookingData.value}")
-                    if(checkBookingData.value == true) {
-                        val booking = Booking(
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Button(
+                    onClick = {
+                        val newBooking = Booking(
                             bookingId = UUID.randomUUID().toString(),
                             user = "user",
                             room = room.roomId,
-                            guests = searchData.guests,
                             checkInDate = arrivalDate.value,
                             checkOutDate = departureDate.value,
-                            amountOfRooms = rooms.value.toInt(),
+                            amountOfRooms = amountOfRooms.value.toInt(),
                             cost = (cost.value),
                             date = LocalDate.now()
                                 .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
                         )
-                        vm.setBooking(booking)
-                    }
-                    else
-                        Toast.makeText(context, "Your request doesn't match", Toast.LENGTH_LONG).show()
-                    /*navController.navigate(Screen.UserSearchResultScreen.route)*/
-                },
-                colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
-                shape = (RoundedCornerShape(32.dp)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 32.dp, end = 32.dp, bottom = 4.dp)
-                    .height(62.dp)
-            ) {
-                Text(text = "Confirm", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        vm.viewModelScope.launch {checkBookingData.value = editBookingData(vm, room, newBooking)}
+
+                        Log.i("got value:",  "${checkBookingData.value}")
+                        if(checkBookingData.value == true) {
+                            vm.setBooking(newBooking)
+                            vm.deleteBooking(oldBooking)
+                            oldBooking = newBooking.bookingId
+                        }
+                        else
+                            Toast.makeText(context, "Your request doesn't match", Toast.LENGTH_LONG).show()
+                        /*navController.navigate(Screen.UserSearchResultScreen.route)*/
+                    },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                    shape = (RoundedCornerShape(32.dp)),
+                    modifier = Modifier
+                        //.fillMaxWidth()
+                        //.padding(start = 32.dp, end = 32.dp, bottom = 4.dp)
+                        .height(62.dp)
+                        .width(120.dp)
+                ) {
+                    Text(text = "Edit", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = { openDeleteDialog.value = true },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                    shape = (RoundedCornerShape(32.dp)),
+                    modifier = Modifier
+                        //.fillMaxWidth()
+                        //.padding(start = 32.dp, end = 32.dp, bottom = 4.dp)
+                        .height(62.dp)
+                        .width(120.dp)
+                ) {
+                    Text(text = "Cancel", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                if(openDeleteDialog.value) {
+                    AlertDialog(
+                        onDismissRequest = { openDeleteDialog.value = false },
+                        title = { Text(text = "Are you sure?\nYour booking will be canceled.") },
+                        shape = RoundedCornerShape(24.dp),
+                        backgroundColor = Color.White.copy(alpha = 0.8f),
+                        //modifier = Modifier.width(180.dp),
+                        buttons = {
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceAround,
+                                modifier = Modifier.padding(start = 8.dp, end = 8.dp).fillMaxWidth()
+                            ) {
+                                Button(
+                                    onClick = {
+                                        vm.deleteBooking(oldBooking)
+                                        openDeleteDialog.value = false
+                                    },
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                                    shape = (RoundedCornerShape(32.dp)),
+                                    modifier = Modifier
+                                        .width(80.dp)
+                                        .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
+                                ) {
+                                    Text(text = "Yes", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Button(
+                                    onClick = {
+                                        openDeleteDialog.value = false
+                                    },
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                                    shape = (RoundedCornerShape(32.dp)),
+                                    modifier = Modifier
+                                        .width(80.dp)
+                                        .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
+                                ) {
+                                    Text(text = "No", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                }
+                                //SortDialogButton(openSortDialog, "Amenities")
+                            }
+                        }
+                    )
+                }
             }
         }
     ) {
@@ -146,7 +204,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
                         Spacer(modifier = Modifier.padding(4.dp))
 
-                        ShowDateChangePicker1(context, arrivalDate, cost, room.price, departureDate,rooms, nights)
+                        ShowDateChangePicker1(context, arrivalDate, cost, room.price, departureDate, amountOfRooms, nights)
                     }
 
                     Spacer(modifier = Modifier.padding(start = 64.dp))
@@ -156,7 +214,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
                         Spacer(modifier = Modifier.padding(4.dp))
 
-                        ShowDateChangePicker2(context, arrivalDate, cost, room.price, departureDate,rooms, nights)
+                        ShowDateChangePicker2(context, arrivalDate, cost, room.price, departureDate, amountOfRooms, nights)
 
                     }
                 }
@@ -189,7 +247,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
                     Spacer(modifier = Modifier.padding(4.dp))
 
-                    RoomsNumberInputField(rooms, cost, nights, room.price)
+                    RoomsNumberInputField(amountOfRooms, cost, nights, room.price)
 
                 }
                 Spacer(Modifier.padding(16.dp))
@@ -244,129 +302,12 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
         }
 
     }
-
 }
 
-@Composable
-fun RoomsNumberInputField(value: MutableState<String>, cost: MutableState<Int>, nights: MutableState<Int>, price: Int) {
-    OutlinedTextField(
-        value.value, {
-            value.value = it
-            if(it != null && it != "")
-                cost.value = it.toInt() * price * nights.value},
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        shape = (RoundedCornerShape(24.dp)),
-        singleLine = true,
-        colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
-        modifier = Modifier
-            .height(52.dp)
-            .width(124.dp)
-    )
-}
-
-@Composable
-fun ShowDateChangePicker1(context: Context, arrivalDate: MutableState<String>, cost: MutableState<Int>,
-                          price: Int, departureDate: MutableState<String>, rooms: MutableState<String>,
-                          nights: MutableState<Int>,){
-    val formatter = SimpleDateFormat("dd.MM.yyyy")
-    val year: Int
-    val month: Int
-    val day: Int
-    val calendar = Calendar.getInstance()
-    year = calendar.get(Calendar.YEAR)
-    month = calendar.get(Calendar.MONTH)
-    day = calendar.get(Calendar.DAY_OF_MONTH)
-    calendar.time = Date()
-
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            arrivalDate.value = "$dayOfMonth.${month+1}.$year"
-            nights.value = (abs(formatter.parse(arrivalDate.value)!!.time
-                    - formatter.parse(departureDate.value)!!.time) / (1000 * 60 * 60 * 24)).toInt()
-            cost.value = nights.value.toInt() * price * rooms.value.toInt()
-        }, year, month, day
-    )
-    Row {
-        Button(
-            onClick = { datePickerDialog.show() },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
-            shape = (RoundedCornerShape(24.dp)),
-            modifier = Modifier
-                .height(52.dp)
-                .width(124.dp)
-        ) {
-            Text(text = arrivalDate.value)
-        }
-    }
-}
-
-@Composable
-fun ShowDateChangePicker2(context: Context, arrivalDate: MutableState<String>, cost: MutableState<Int>,
-                          price: Int, departureDate: MutableState<String>, rooms: MutableState<String>,
-                          nights: MutableState<Int>,){
-    val formatter = SimpleDateFormat("dd.MM.yyyy")
-    val year: Int
-    val month: Int
-    val day: Int
-    val calendar = Calendar.getInstance()
-    year = calendar.get(Calendar.YEAR)
-    month = calendar.get(Calendar.MONTH)
-    day = calendar.get(Calendar.DAY_OF_MONTH)
-    calendar.time = Date()
-
-    val datePickerDialog = DatePickerDialog(
-        context,
-        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            departureDate.value = "$dayOfMonth.${month+1}.$year"
-            nights.value = (abs(formatter.parse(arrivalDate.value)!!.time
-                    - formatter.parse(departureDate.value)!!.time) / (1000 * 60 * 60 * 24)).toInt()
-            cost.value = nights.value.toInt() * price * rooms.value.toInt()
-        }, year, month, day
-    )
-    Row {
-        Button(
-            onClick = { datePickerDialog.show() },
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
-            shape = (RoundedCornerShape(24.dp)),
-            modifier = Modifier
-                .height(52.dp)
-                .width(124.dp)
-        ) {
-            Text(text = departureDate.value)
-        }
-    }
-}
-
-@Composable
-fun TopAmenitiesInOrder(amenities: Map<String, Boolean>) {
-    Row() {
-        Column() {
-            TopAmenity(R.drawable.ic_wifi, "Wi-fi in room", amenities["Wi-fi in room"]!!)
-            Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_ac_unit, "AC unit", amenities["AC unit"]!!)
-            Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_smoke_free, "No smoking", amenities["No smoking"]!!)
-            Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_bar, "Hotel bar", amenities["Hotel bar"]!!)
-        }
-        Spacer(modifier = Modifier.padding(end = 80.dp))
-        Column(/*modifier = Modifier.padding(start = 24.dp, end = 24.dp)*/) {
-            TopAmenity(R.drawable.ic_parking, "Free parking", amenities["Free parking"]!!)
-            Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_pets, "Pet friendly", amenities["Pet friendly"]!!)
-            Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_gym, "Gym", amenities["Gym"]!!)
-            Spacer(Modifier.padding(20.dp))
-            TopAmenity(R.drawable.ic_restaurant, "Restaurant", amenities["Restaurant"]!!)
-        }
-    }
-}
-
-suspend fun checkBookingData(vm: MainViewModel, room: Room, searchData: Search): Boolean {
+suspend fun editBookingData(vm: MainViewModel, room: Room, booking: Booking): Boolean {
     val result: Deferred<Boolean>
     runBlocking {
-        result = async { vm.checkIfRoomsFree(room, searchData)}
+        result = async { vm.checkBookingEdition(room, booking)}
     }
     return result.await()
 }

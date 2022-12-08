@@ -101,5 +101,25 @@ fun MainNavigation(login: String) {
             entry.arguments?.getBoolean("isBook")
                 ?.let { SortScreen(navController = navController, isBook = it) }
             }
+
+        composable(route = Screen.EditBookingScreen.route + "/{room}/{hotel}/{booking}",
+            arguments = listOf(
+                navArgument("room") {
+                    type = RoomType()
+                },
+                navArgument("hotel") {
+                    type = HotelType()
+                },
+                navArgument("booking") {
+                    type = BookingType()
+                }
+            )
+        ) { entry ->
+            val room = entry.arguments?.getParcelable<Room>("room")
+            val hotel = entry.arguments?.getParcelable<Hotel>("hotel")
+            val booking = entry.arguments?.getParcelable<Booking>("booking")
+            EditBookingScreen( navController = navController, room = room!!, hotel = hotel!!, booking = booking!!)
+        }
+
     }
 }

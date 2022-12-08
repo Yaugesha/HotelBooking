@@ -100,6 +100,7 @@ class Model {
         dataBase.child("Bookings").child(booking.bookingId).child("bookingId").setValue(booking.bookingId)
         dataBase.child("Bookings").child(booking.bookingId).child("user").setValue(booking.user)
         dataBase.child("Bookings").child(booking.bookingId).child("room").setValue(booking.room)
+        dataBase.child("Bookings").child(booking.bookingId).child("guests").setValue(booking.guests)
         dataBase.child("Bookings").child(booking.bookingId).child("checkInDate").setValue(booking.checkInDate)
         dataBase.child("Bookings").child(booking.bookingId).child("checkOutDate").setValue(booking.checkOutDate)
         dataBase.child("Bookings").child(booking.bookingId).child("amountOfRooms").setValue(booking.amountOfRooms)
@@ -114,7 +115,12 @@ class Model {
     }
 
     suspend fun findUserBookings(login: String): HashMap<String, Booking>? {
-        return dataBase.child("Bookings").orderByChild("user").equalTo(login).get().await().getValue<HashMap<String, Booking>>()
+        var bookingsMap = dataBase.child("Bookings").orderByChild("user").equalTo(login).get().await().getValue<HashMap<String, Booking>>()
+        if (bookingsMap != null) {
+            if(bookingsMap.isNotEmpty())
+                return bookingsMap
+        }
+            return null
     }
 
     suspend fun loadListOfHotels(): HashMap<String, Hotel> {
@@ -270,4 +276,7 @@ class Model {
         return dataBase.child("Hotels").orderByChild("name").equalTo(hotelName).get().await().getValue<HashMap<String, Hotel>>()
 }
 
+    fun deleteBooking(bookingId: String) {
+        dataBase.child("Bookings").child(bookingId).removeValue()
+    }
 }
