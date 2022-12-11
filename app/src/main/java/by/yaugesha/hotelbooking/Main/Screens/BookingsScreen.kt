@@ -24,6 +24,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.*
+import by.yaugesha.hotelbooking.Main.FavoriteButton
 import by.yaugesha.hotelbooking.Main.MainViewModel
 import by.yaugesha.hotelbooking.Main.SortDialogButton
 import by.yaugesha.hotelbooking.Main.setHotelForRoom
@@ -39,7 +40,9 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.util.*
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "CoroutineCreationDuringComposition",
+    "SuspiciousIndentation"
+)
 @Composable
 fun BookingsScreen(navController: NavController) {
     val context = LocalContext.current
@@ -54,7 +57,9 @@ fun BookingsScreen(navController: NavController) {
         ) {
             if (bookingsList.isEmpty()) {
                 Row(
-                    modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentHeight(Alignment.CenterVertically)
                 ) {
                     Text(
                         text = "No rooms found", fontSize = 40.sp,
@@ -101,45 +106,7 @@ fun BookingsScreen(navController: NavController) {
                                         modifier = Modifier.clip(RoundedCornerShape(24.dp))
                                     )
                                 }
-                                Row(
-                                    modifier = Modifier
-                                        .wrapContentHeight(Alignment.Top)
-                                        .padding(top = 8.dp, start = 96.dp)
-                                ) {
-                                    val favouriteVisible =
-                                        rememberSaveable { mutableStateOf(false) }
-
-                                    if (favouriteVisible.value) {
-                                        IconButton(
-                                            onClick = {
-                                                favouriteVisible.value = !favouriteVisible.value
-                                            },
-                                            modifier = Modifier
-                                                .height(24.dp)
-                                                .width(24.dp)
-                                        ) {
-                                            Icon(
-                                                painterResource(R.drawable.ic_heart_red),
-                                                contentDescription = "Favorite",
-                                                tint = Color.Red
-                                            )
-                                        }
-                                    } else
-                                        IconButton(
-                                            onClick = {
-                                                favouriteVisible.value = !favouriteVisible.value
-                                            },
-                                            modifier = Modifier
-                                                .height(24.dp)
-                                                .width(24.dp)
-                                        ) {
-                                            Icon(
-                                                painterResource(R.drawable.ic_favorite),
-                                                contentDescription = "Favorite"
-                                            )
-
-                                        }
-                                }
+                                FavoriteButton(vm, "user", room.roomId)
                             }
                             BookingDescriptionCard(
                                 navController,
@@ -183,11 +150,17 @@ fun BookingDescriptionCard(navController: NavController, booking: Booking, room:
                 Spacer(modifier = Modifier.padding(top = 2.dp))
 
                 val formatter = SimpleDateFormat("dd.MM.yyyy")
-                var status = ""
-                status = if(formatter.parse(booking.checkInDate).time > Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()).time)
-                    "current"
-                else
-                    "old"
+                val status: String = if(booking.status == "active") {
+                    if (formatter.parse(booking.checkInDate).time >= Date.from(
+                            LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                        ).time
+                    )
+                        "current"
+                    else
+                        "old"
+                } else {
+                    booking.status
+                }
                 Text(
                     text = hotel.city + ", " + hotel.country + "\n" + booking.checkInDate + "-" + booking.checkOutDate
                     + "\nStatus: " + status,
@@ -201,38 +174,6 @@ fun BookingDescriptionCard(navController: NavController, booking: Booking, room:
         Spacer(modifier = Modifier.padding(top = 12.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            /*val favouriteVisible = rememberSaveable { mutableStateOf(false) }
-
-            if (favouriteVisible.value)
-            {
-                IconButton(
-                    onClick = {  favouriteVisible.value = ! favouriteVisible.value },
-                    modifier = Modifier
-                        .height(24.dp)
-                        .width(24.dp)
-                ) {
-                    Icon(
-                        painterResource(R.drawable.ic_heart_red),
-                        contentDescription = "Favorite",
-                        tint = Color.Red
-                    )
-                }
-            }
-            else
-                IconButton(
-                    onClick = {  favouriteVisible.value = ! favouriteVisible.value },
-                    modifier = Modifier
-                        .height(24.dp)
-                        .width(24.dp)
-                ) {
-                    Icon(
-                        painterResource(R.drawable.ic_favorite),
-                        contentDescription = "Favorite"
-                    )
-                }
-
-            Spacer(modifier = Modifier.padding(6.dp))*/
-
             Button(
                 onClick =
                 {
@@ -245,7 +186,9 @@ fun BookingDescriptionCard(navController: NavController, booking: Booking, room:
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                 shape = (RoundedCornerShape(16.dp)),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 2.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 2.dp)
             ) {
                 Text(
                     text = "Show details",

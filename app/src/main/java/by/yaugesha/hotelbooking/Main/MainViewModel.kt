@@ -4,11 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.Model
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.math.BigInteger
 import java.security.MessageDigest
@@ -131,6 +128,10 @@ class MainViewModel: ViewModel() {
         return true
     }
 
+    fun cancelBooking(bookingId: String){
+        model.cancelBooking(bookingId)
+    }
+
     fun deleteBooking(bookingId: String){
         model.deleteBooking(bookingId)
     }
@@ -168,7 +169,6 @@ class MainViewModel: ViewModel() {
         val room = Room()
         room.roomId = roomMap["roomId"].toString()
         room.hotelID = roomMap["hotelID"].toString()
-        Log.i("found room", "Got: ${roomMap["peopleCapacity"]} ")
         room.peopleCapacity = roomMap["peopleCapacity"].toString().toInt()
         room.price = roomMap["price"].toString().toInt()
         room.numberOfRooms = roomMap["numberOfRooms"].toString().toInt()
@@ -191,5 +191,34 @@ class MainViewModel: ViewModel() {
     fun setBooking(booking: Booking) {
         model.booking = booking
         model.writeNewBooking()
+    }
+
+    fun setFavorite(roomId: String, login: String) {
+        model.writeNewFavorite(roomId, login)
+    }
+
+    fun deleteFavorite(roomId: String, login: String) {
+        model.deleteFavorite(roomId, login)
+    }
+
+    suspend fun loadListOfFavorites(login: String): MutableList<Room> {
+        val mapOfRoomsId = model.getListOfFavorites(login)
+        Log.i("Map of favorites Id's", mapOfRoomsId.toString())
+        val listOfRooms = mutableListOf<Room>()
+        mapOfRoomsId?.forEach { (roomId, favoriteId) ->
+            listOfRooms.add(getRoomById(roomId))
+        }
+        Log.i("Map of favorites", listOfRooms.toString())
+        return listOfRooms
+    }
+
+    suspend fun checkIsRoomInFavorites(roomId: String, login: String): Boolean {
+        //val listOfFavorites = loadListOfFavorites(login)
+        model.getListOfFavorites(login)?.forEach { (favRoomId, favoriteId) ->
+            Log.i(favRoomId, roomId)
+            if(favRoomId == roomId)
+                return true
+        }
+        return false
     }
 }

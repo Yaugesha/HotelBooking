@@ -11,9 +11,8 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import java.util.*
+import kotlin.collections.HashMap
 
 class Model {
     var user = User()
@@ -105,9 +104,14 @@ class Model {
         dataBase.child("Bookings").child(booking.bookingId).child("checkOutDate").setValue(booking.checkOutDate)
         dataBase.child("Bookings").child(booking.bookingId).child("amountOfRooms").setValue(booking.amountOfRooms)
         dataBase.child("Bookings").child(booking.bookingId).child("cost").setValue(booking.cost)
+        dataBase.child("Bookings").child(booking.bookingId).child("status").setValue(booking.status)
         dataBase.child("Bookings").child(booking.bookingId).child("date").setValue(booking.date/*.format(DateTimeFormatter.ofLocalizedDate(
             FormatStyle.SHORT))*/)
         //dataBase.child("Rooms").child(booking.room).child("bookings").child(booking.id).setValue(LocalDateTime.now())
+    }
+
+    fun writeNewFavorite(roomId: String, login: String) {
+        dataBase.child("Favorites").child(login).child(roomId).setValue(UUID.randomUUID().toString())
     }
 
     suspend fun findBookingsOFRoom(roomId: String): HashMap<String, Booking>? {
@@ -276,7 +280,20 @@ class Model {
         return dataBase.child("Hotels").orderByChild("name").equalTo(hotelName).get().await().getValue<HashMap<String, Hotel>>()
 }
 
+    fun cancelBooking(bookingId: String) {
+        dataBase.child("Bookings").child(bookingId).child("status").setValue("canceled")
+    }
+
     fun deleteBooking(bookingId: String) {
         dataBase.child("Bookings").child(bookingId).removeValue()
     }
+
+    fun deleteFavorite(roomId: String, login: String) {
+        dataBase.child("Favorites").child(login).child(roomId).removeValue()
+    }
+
+    suspend fun getListOfFavorites(login: String): HashMap<String, String>? {
+        return dataBase.child("Favorites").child(login).get().await().getValue<HashMap<String, String>>()
+    }
+
 }

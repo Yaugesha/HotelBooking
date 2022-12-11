@@ -136,7 +136,7 @@ fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, bo
                             ) {
                                 Button(
                                     onClick = {
-                                        vm.deleteBooking(oldBooking)
+                                        vm.cancelBooking(oldBooking)
                                         openDeleteDialog.value = false
                                     },
                                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
@@ -175,28 +175,28 @@ fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, bo
                 .padding(start = 24.dp, end = 24.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            Card(backgroundColor = Color.White,
+                //shape = (RoundedCornerShape(32.dp)),
+                modifier = Modifier
+                    .wrapContentWidth(Alignment.Start)
+                    .height(200.dp)
+                    .fillMaxWidth())
+            {
+                AsyncImage(
+                    model = room.photoURI, contentDescription = "Room img",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .width(397.dp)
+                    //modifier = Modifier.clip(RoundedCornerShape(24.dp))
+                )
+            }
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(start = 14.dp, end = 14.dp)
             )
             {
-                Card(backgroundColor = Color.White,
-                    //shape = (RoundedCornerShape(32.dp)),
-                    modifier = Modifier
-                        .wrapContentWidth(Alignment.Start)
-                        .height(200.dp)
-                        .fillMaxWidth())
-                {
-                    AsyncImage(
-                        model = room.photoURI, contentDescription = "Room img",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .width(397.dp)
-                        //modifier = Modifier.clip(RoundedCornerShape(24.dp))
-                    )
-                }
-                Spacer(modifier = Modifier.padding(12.dp))
+                Spacer(modifier = Modifier.padding(108.dp))
                 Text(text = "Dates:", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Row {
                     Column {

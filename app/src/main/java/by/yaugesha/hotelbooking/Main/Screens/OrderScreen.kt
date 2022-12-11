@@ -68,6 +68,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
             - formatter.parse(departureDate.value)!!.time) / (1000 * 60 * 60 * 24)).toInt())}
     val cost = rememberSaveable { mutableStateOf(nights.value * room.price * rooms.value.toInt()) }
     val checkBookingData = rememberSaveable { mutableStateOf(false) }
+    val guests = rememberSaveable { mutableStateOf(searchData.guests.toString()) }
 
     Scaffold(
         bottomBar = {
@@ -84,7 +85,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
                             bookingId = UUID.randomUUID().toString(),
                             user = "user",
                             room = room.roomId,
-                            guests = searchData.guests,
+                            guests = guests.value.toInt(),
                             checkInDate = arrivalDate.value,
                             checkOutDate = departureDate.value,
                             amountOfRooms = rooms.value.toInt(),
@@ -117,28 +118,29 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
                 .padding(start = 24.dp, end = 24.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            Card(backgroundColor = Color.White,
+                //shape = (RoundedCornerShape(32.dp)),
+                modifier = Modifier
+                    .wrapContentWidth(Alignment.Start)
+                    .height(200.dp)
+                    .fillMaxWidth())
+            {
+                AsyncImage(
+                    model = room.photoURI, contentDescription = "Room img",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                    //.width(397.dp)
+                    //modifier = Modifier.clip(RoundedCornerShape(24.dp))
+                )
+            }
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(start = 14.dp, end = 14.dp)
             )
             {
-                Card(backgroundColor = Color.White,
-                    //shape = (RoundedCornerShape(32.dp)),
-                    modifier = Modifier
-                        .wrapContentWidth(Alignment.Start)
-                        .height(200.dp)
-                        .fillMaxWidth())
-                {
-                    AsyncImage(
-                        model = room.photoURI, contentDescription = "Room img",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .width(397.dp)
-                        //modifier = Modifier.clip(RoundedCornerShape(24.dp))
-                    )
-                }
-                Spacer(modifier = Modifier.padding(12.dp))
+                Spacer(modifier = Modifier.padding(108.dp))
+                //Spacer(modifier = Modifier.padding(12.dp))
                 Text(text = "Dates:", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Row {
                     Column {
@@ -184,14 +186,27 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
                     }
                 }
                 Spacer(Modifier.padding(12.dp))
-                Column {
-                    Text(text = "Rooms", fontSize = 14.sp)
+                Row {
+                    Column {
+                        Text(text = "Guests", fontSize = 14.sp)
 
-                    Spacer(modifier = Modifier.padding(4.dp))
+                        Spacer(modifier = Modifier.padding(4.dp))
 
-                    RoomsNumberInputField(rooms, cost, nights, room.price)
+                        LittleNumberInputField(guests)
+                    }
 
+                    Spacer(modifier = Modifier.padding(start = 68.dp))
+
+                    Column {
+                        Text(text = "Rooms", fontSize = 14.sp)
+
+                        Spacer(modifier = Modifier.padding(4.dp))
+
+                        RoomsNumberInputField(rooms, cost, nights, room.price)
+
+                    }
                 }
+
                 Spacer(Modifier.padding(16.dp))
                 TopAmenitiesInOrder(amenities)
                 Spacer(Modifier.padding(16.dp))

@@ -17,7 +17,7 @@ data class Booking(
     var checkInDate: String = "",
     var checkOutDate: String = "",
     var guests: Int = 0,
-    //var amenities: MutableList<String>,
+    var status: String = "active",
     var cost: Int = 0,
     val date: String = ""
 ): Parcelable

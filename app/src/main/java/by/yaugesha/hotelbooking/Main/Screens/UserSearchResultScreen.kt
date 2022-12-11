@@ -32,6 +32,7 @@ import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
 import com.google.gson.Gson
 import kotlinx.coroutines.*
+import kotlin.math.abs
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
@@ -43,7 +44,7 @@ fun UserSearchResultScreen(navController: NavController, searchData: Search) {
         .background(BackgroundColor)
         .fillMaxSize()
         .verticalScroll(rememberScrollState())) {
-        if(roomList.isEmpty()){
+        if (roomList.isEmpty()) {
             Row(modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)) {
                 Text(
                     text = "No rooms found", fontSize = 40.sp,
@@ -54,41 +55,16 @@ fun UserSearchResultScreen(navController: NavController, searchData: Search) {
                         .wrapContentHeight(Alignment.CenterVertically)
                 )
             }
-
-        }
-        else{
+        } else {
             SearchHotelParametersBar(navController)
             Spacer(modifier = Modifier.padding(top = 36.dp))
             for (i in roomList.indices) {
                 val hotel = rememberSaveable { mutableStateOf(Hotel()) }
-                vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, roomList[i].hotelID)}
+                vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, roomList[i].hotelID) }
                 Log.i("Hotel", hotel.toString())
-                Card(
-                    shape = (RoundedCornerShape(24.dp)),
-                    backgroundColor = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally)
-                        .height(160.dp)
-                        .width(360.dp)
-                ) {
-                    Box {
-                        Card(
-                            modifier = Modifier
-                                .wrapContentWidth(Alignment.Start)
-                                .height(180.dp)
-                                .width(140.dp)
-                                .fillMaxHeight()){
-                            AsyncImage( //height(513.dp).width(396.dp)
-                                model = hotel.value.photoURI, contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.clip(RoundedCornerShape(24.dp))
-                            )
-                        }
-                        FavoriteButton()
-                    }
-                    HotelCardDescriptionForUser(navController,searchData, roomList[i], hotel.value)
-                }
+
+                HotelCardDescriptionForUser(navController, vm, searchData, roomList[i], hotel.value)
+
                 Spacer(modifier = Modifier.padding(top = 20.dp))
             }
         }
@@ -193,83 +169,124 @@ fun SortDialogButton(openSortDialog: MutableState<Boolean>, text: String) {
     }
 }
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun HotelCardDescriptionForUser(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
-    val nights = Math.abs(searchData.checkOutDate.getTime() - searchData.checkInDate.getTime()) / (1000 * 60 * 60 * 24)
+fun HotelCardDescriptionForUser(navController: NavController, vm: MainViewModel, searchData: Search, room: Room, hotel: Hotel) {
+    val nights = abs(searchData.checkOutDate.time - searchData.checkInDate.time) / (1000 * 60 * 60 * 24)
 
-    Column(
+    Card(
+        shape = (RoundedCornerShape(24.dp)),
+        backgroundColor = Color.White,
         modifier = Modifier
-            .padding(top = 8.dp, start = 152.dp, bottom = 8.dp, end = 18.dp)
+            .fillMaxWidth()
+            .wrapContentWidth(Alignment.CenterHorizontally)
+            .height(160.dp)
+            .width(360.dp)
     ) {
-        Text(text = hotel.name, fontSize = 20.sp)
-
-        Spacer(modifier = Modifier.padding(top = 8.dp))
-
-        Row {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_location_on),
-                contentDescription = "location"
-            )
-
-            Text(text = "${hotel.street} ${hotel.building}", fontSize = 14.sp)
-
-            Spacer(modifier = Modifier.padding(8.dp))
+        Box {
+            Card(
+                modifier = Modifier
+                    .wrapContentWidth(Alignment.Start)
+                    .height(180.dp)
+                    .width(140.dp)
+                    .fillMaxHeight()
+            ) {
+                AsyncImage( //height(513.dp).width(396.dp)
+                    model = hotel.photoURI, contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.clip(RoundedCornerShape(24.dp))
+                )
+            }
+            val isFavorite = remember { mutableStateOf(false) }
+            vm.viewModelScope.launch {
+                isFavorite.value = isRoomInFavorites(vm, room.roomId, "user")
+            }
+            FavoriteButton(vm, "user", room.roomId/*, isFavorite.value*/)
+            Log.i("room in ${room.roomId}", isFavorite.value.toString())
         }
-
-        Spacer(modifier = Modifier.padding(top = 8.dp))
-
-        Card(
-            shape = (RoundedCornerShape(24.dp)),
-            backgroundColor = ButtonColor,
+        Column(
             modifier = Modifier
-                .height(70.dp)
-                .width(192.dp)
-                .clickable {
-                    val roomJson = Uri.encode(Gson().toJson(room))
-                    val hotelJson = Uri.encode(Gson().toJson(hotel))
-                    val searchJson = Uri.encode(Gson().toJson(searchData))
-                    navController.navigate(
-                        Screen.RoomScreen.route + "/" + roomJson.toString()
-                                + "/" + hotelJson.toString() + "/" + searchJson.toString()
-                    )
-                }
+                .padding(top = 8.dp, start = 152.dp, bottom = 8.dp, end = 18.dp)
         ) {
-            Column(modifier = Modifier
-                .padding(start = 8.dp)
-                .wrapContentHeight(Alignment.CenterVertically)) {
-                Row {
-                    Text(
-                        text = "$",
-                        fontSize = 10.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(start = 6.dp, top = 3.dp)
-                    )
-                    Spacer(modifier = Modifier.padding(start = 1.dp))
-                    Text(text = "${room.price * nights}", fontSize = 14.sp, color = Color.White,)
-                }
-                Spacer(modifier = Modifier.padding(top = 2.dp))
+            Text(text = hotel.name, fontSize = 20.sp)
 
-                var beds = ""
-                if(room.numberOfDoubleBeds == 0) {
-                    beds = "${room.numberOfSingleBeds} single"
-                }
-                if(room.numberOfSingleBeds == 0) {
-                    beds = "${room.numberOfDoubleBeds} double"
-                }
-                if(room.numberOfDoubleBeds != 0 && room.numberOfSingleBeds != 0)
-                    beds = "${room.numberOfDoubleBeds} double + ${room.numberOfSingleBeds} single"
+            Spacer(modifier = Modifier.padding(top = 8.dp))
 
-                Text(
-                    text = "For $nights nights\n$beds",
-                    fontSize = 12.sp,
-                    color = Color.White,
+            Row {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_location_on),
+                    contentDescription = "location"
+                )
+
+                Text(text = "${hotel.street} ${hotel.building}", fontSize = 14.sp)
+
+                Spacer(modifier = Modifier.padding(8.dp))
+            }
+
+            Spacer(modifier = Modifier.padding(top = 8.dp))
+
+            Card(
+                shape = (RoundedCornerShape(24.dp)),
+                backgroundColor = ButtonColor,
+                modifier = Modifier
+                    .height(70.dp)
+                    .width(192.dp)
+                    .clickable {
+                        val roomJson = Uri.encode(Gson().toJson(room))
+                        val hotelJson = Uri.encode(Gson().toJson(hotel))
+                        val searchJson = Uri.encode(Gson().toJson(searchData))
+                        navController.navigate(
+                            Screen.RoomScreen.route + "/" + roomJson.toString()
+                                    + "/" + hotelJson.toString() + "/" + searchJson.toString()
+                        )
+                    }
+            ) {
+                Column(
                     modifier = Modifier
                         .padding(start = 8.dp)
-                )
+                        .wrapContentHeight(Alignment.CenterVertically)
+                ) {
+                    Row {
+                        Text(
+                            text = "$",
+                            fontSize = 10.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(start = 6.dp, top = 3.dp)
+                        )
+                        Spacer(modifier = Modifier.padding(start = 1.dp))
+                        Text(
+                            text = "${room.price * nights}",
+                            fontSize = 14.sp,
+                            color = Color.White,
+                        )
+                    }
+                    Spacer(modifier = Modifier.padding(top = 2.dp))
+
+                    var beds = ""
+                    if (room.numberOfDoubleBeds == 0) {
+                        beds = "${room.numberOfSingleBeds} single"
+                    }
+                    if (room.numberOfSingleBeds == 0) {
+                        beds = "${room.numberOfDoubleBeds} double"
+                    }
+                    if (room.numberOfDoubleBeds != 0 && room.numberOfSingleBeds != 0)
+                        beds =
+                            "${room.numberOfDoubleBeds} double + ${room.numberOfSingleBeds} single"
+
+                    Text(
+                        text = "For $nights nights\n$beds",
+                        fontSize = 12.sp,
+                        color = Color.White,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                    )
+                }
             }
         }
     }
 }
+
+
 
 suspend fun setRoomList(vm: MainViewModel, searchData: Search): List<Room> {
     val result: Deferred<List<Room>>

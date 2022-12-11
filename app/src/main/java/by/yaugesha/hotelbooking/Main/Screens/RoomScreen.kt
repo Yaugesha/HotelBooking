@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import by.yaugesha.hotelbooking.Authorization.ui.theme.AdminCardColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
@@ -34,16 +35,22 @@ import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.Screen
 import by.yaugesha.hotelbooking.DataClasses.Search
+import by.yaugesha.hotelbooking.Main.MainViewModel
 import by.yaugesha.hotelbooking.Main.SortDialogButton
+import by.yaugesha.hotelbooking.Main.isRoomInFavorites
 import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
 import com.google.gson.Gson
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
 @Composable
 fun RoomScreen(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
     val amenities: Map<String, Boolean> = room.amenities + hotel.amenities
+    val vm = MainViewModel()
     val nights = Math.abs(searchData.checkOutDate.getTime() - searchData.checkInDate.getTime()) / (1000 * 60 * 60 * 24)
+    val formatter = SimpleDateFormat("dd.MMM")
     Scaffold(
         topBar = {
             Card(
@@ -54,8 +61,8 @@ fun RoomScreen(navController: NavController, searchData: Search, room: Room, hot
                     .height(62.dp)
             ) {
                 Text(
-                    text = "${hotel.city}, ${hotel.country}\n\n${searchData.checkInDate} - " +
-                            "${searchData.checkOutDate}\tGuests: ${searchData.guests}, Rooms: ${searchData.rooms}",
+                    text = "${hotel.city}, ${hotel.country}\n\n${formatter.format(searchData.checkInDate)} - " +
+                           "${formatter.format(searchData.checkOutDate)}\tGuests: ${searchData.guests}, Rooms: ${searchData.rooms}",
                     color = Color.White, fontSize = 16.sp, textAlign = TextAlign.Center,
                 )
             }
@@ -131,13 +138,20 @@ fun RoomScreen(navController: NavController, searchData: Search, room: Room, hot
                 Spacer(Modifier.padding(4.dp))
                 Row( modifier = Modifier.padding(end = 18.dp)) {
                     Text(text = "Square: ${room.square}sqm", fontSize = 16.sp)
-                    val favouriteVisible = rememberSaveable { mutableStateOf(false) }
+
                     Spacer(Modifier.padding(6.dp))
 
+                    val favouriteVisible = remember { mutableStateOf(false) }
+                    vm.viewModelScope.launch {
+                        favouriteVisible.value = isRoomInFavorites(vm, room.roomId, "user")
+                    }
                     if (favouriteVisible.value)
                     {
                         IconButton(
-                            onClick = {  favouriteVisible.value = ! favouriteVisible.value },
+                            onClick = {
+                                vm.deleteFavorite(room.roomId, "user")
+                                favouriteVisible.value = ! favouriteVisible.value
+                            },
                             modifier = Modifier
                                 .height(24.dp)
                                 .width(24.dp)
@@ -151,7 +165,10 @@ fun RoomScreen(navController: NavController, searchData: Search, room: Room, hot
                     }
                     else
                         IconButton(
-                            onClick = {  favouriteVisible.value = ! favouriteVisible.value },
+                            onClick = {
+                                vm.setFavorite(room.roomId, "user")
+                                favouriteVisible.value = !favouriteVisible.value
+                            },
                             modifier = Modifier
                                 .height(24.dp)
                                 .width(24.dp)
