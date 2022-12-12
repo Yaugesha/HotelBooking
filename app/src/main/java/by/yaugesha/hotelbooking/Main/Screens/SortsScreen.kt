@@ -1,6 +1,7 @@
 package by.yaugesha.hotelbooking.Main.Screens
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,6 +14,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,17 +22,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.Admin.Hotel.Add.BedNumberInputField
+import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
+import by.yaugesha.hotelbooking.DataClasses.Screen
+import by.yaugesha.hotelbooking.DataClasses.Search
+import by.yaugesha.hotelbooking.DataClasses.Sort
 import by.yaugesha.hotelbooking.Main.LittleNumberInputField
+import com.google.gson.Gson
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
-fun SortScreen(navController: NavController, isBook: Boolean = true) {
+fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean = true) {
     Log.i("got", isBook.toString())
     val guests = 3
+    val minPrice = remember { mutableStateOf("0") }
+    val maxPrice = remember { mutableStateOf("0") }
     val numberOfDoubleBeds = remember { mutableStateOf(0) }
     val numberOfSingleBeds = remember { mutableStateOf(0) }
+    val status = remember { mutableStateOf("") }
+    val mapOfAmenities = rememberSaveable { searchData.sorts.mapOfAmenities}
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -46,7 +57,7 @@ fun SortScreen(navController: NavController, isBook: Boolean = true) {
 
                 Spacer(modifier = Modifier.padding(4.dp))
 
-                LittleNumberInputField(mutableStateOf(" "))
+                LittleNumberInputField(minPrice)
             }
 
             Spacer(modifier = Modifier.padding(start = 68.dp))
@@ -56,7 +67,7 @@ fun SortScreen(navController: NavController, isBook: Boolean = true) {
 
                 Spacer(modifier = Modifier.padding(4.dp))
 
-                LittleNumberInputField(mutableStateOf(" "))
+                LittleNumberInputField(maxPrice)
 
             }
         }
@@ -70,65 +81,65 @@ fun SortScreen(navController: NavController, isBook: Boolean = true) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SortAmenities("Wi-fi in room")
-                SortAmenities("Bathroom")
-                SortAmenities("Wi-fi in lobby")
+                SortAmenities("Wi-fi in room", mapOfAmenities)
+                SortAmenities("Bathroom", mapOfAmenities)
+                SortAmenities("Wi-fi in lobby", mapOfAmenities)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SortAmenities("Departure from airport")
-                SortAmenities("Casino")
-                SortAmenities("Spa")
+                SortAmenities("Departure from airport", mapOfAmenities)
+                SortAmenities("Casino", mapOfAmenities)
+                SortAmenities("Spa", mapOfAmenities)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SortAmenities("Kitchen")
-                SortAmenities("Wheelchair accessible")
-                SortAmenities("Gym")
+                SortAmenities("Kitchen", mapOfAmenities)
+                SortAmenities("Wheelchair accessible", mapOfAmenities)
+                SortAmenities("Gym", mapOfAmenities)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SortAmenities("Swimming pool")
-                SortAmenities("Pet friendly")
-                SortAmenities("Restaurant")
+                SortAmenities("Swimming pool", mapOfAmenities)
+                SortAmenities("Pet friendly", mapOfAmenities)
+                SortAmenities("Restaurant", mapOfAmenities)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SortAmenities("No smoking")
-                SortAmenities("AC unit")
-                SortAmenities("Balcony")
+                SortAmenities("No smoking", mapOfAmenities)
+                SortAmenities("AC unit", mapOfAmenities)
+                SortAmenities("Balcony", mapOfAmenities)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SortAmenities("Free parking")
-                SortAmenities("Hotel bar")
-                SortAmenities("Noise isolation")
+                SortAmenities("Free parking", mapOfAmenities)
+                SortAmenities("Hotel bar", mapOfAmenities)
+                SortAmenities("Noise isolation", mapOfAmenities)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SortAmenities("Business services")
-                SortAmenities("TV in room")
-                SortAmenities("Laundry")
+                SortAmenities("Business services", mapOfAmenities)
+                SortAmenities("TV in room", mapOfAmenities)
+                SortAmenities("Laundry", mapOfAmenities)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                SortAmenities("Cribs")
-                SortAmenities("Outdoor space")
-                SortAmenities("Breakfast included")
+                SortAmenities("Cribs", mapOfAmenities)
+                SortAmenities("Outdoor space", mapOfAmenities)
+                SortAmenities("Breakfast included", mapOfAmenities)
             }
         }
 
@@ -158,7 +169,7 @@ fun SortScreen(navController: NavController, isBook: Boolean = true) {
                     modifier = Modifier.padding(top = 4.dp, start = 30.dp)
                 )
         }
-        else{
+       /* else{
             Text(text = "Status", fontSize = 16.sp)
             Spacer(modifier = Modifier.padding(8.dp))
             Row(
@@ -169,11 +180,26 @@ fun SortScreen(navController: NavController, isBook: Boolean = true) {
                 SortAmenities("Old")
                 SortAmenities("Canceled")
             }
-        }
+        }*/
         Spacer(modifier = Modifier.padding(12.dp))
 
         Button(
-            onClick = {  },
+            onClick = {
+                val mapOfSelectedAmenities = HashMap<String, Boolean>()
+                mapOfAmenities.forEach { (amenity, value) ->
+                    if (value)
+                        mapOfSelectedAmenities[amenity] = true
+                }
+                searchData.sorts = Sort(
+                    minPrice = minPrice.value.toInt(),
+                    maxPrice = maxPrice.value.toInt(),
+                    numberOfDoubleBeds = numberOfDoubleBeds.value,
+                    numberOfSingleBeds = numberOfSingleBeds.value,
+                    mapOfAmenities = mapOfSelectedAmenities
+                )
+                val searchJson = Uri.encode(Gson().toJson(searchData))
+                navController.navigate(Screen.UserSearchResultScreen.route + "/" + searchJson.toString())
+            },
             colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
             shape = (RoundedCornerShape(16.dp)),
             modifier = Modifier
@@ -201,7 +227,7 @@ fun SortScreen(navController: NavController, isBook: Boolean = true) {
 }
 
 @Composable
-fun SortAmenities(text: String) {
+fun SortAmenities(text: String, mapOfSort: HashMap<String, Boolean>) {
     val color = remember { mutableStateOf(Color.White) }
     val textColor = remember { mutableStateOf(Color.Black) }
     Button(
@@ -209,16 +235,16 @@ fun SortAmenities(text: String) {
             if(color.value == Color.White) {
                 color.value = ButtonColor
                 textColor.value = Color.White
+                mapOfSort[text] = true
             }
             else {
                 color.value = Color.White
                 textColor.value = Color.Black
+                mapOfSort[text] = false
             }
         },
         colors = ButtonDefaults.buttonColors(backgroundColor = color.value),
-        shape = (RoundedCornerShape(32.dp)),
-//        modifier = Modifier
-//            .
+        shape = (RoundedCornerShape(32.dp))
     ) {
         Text(text = text, fontSize = 12.sp, color = textColor.value)
     }

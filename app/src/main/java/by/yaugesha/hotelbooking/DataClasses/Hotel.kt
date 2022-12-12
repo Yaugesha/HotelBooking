@@ -1,12 +1,10 @@
 package by.yaugesha.hotelbooking.DataClasses
 
-import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import androidx.navigation.NavType
 import com.google.gson.Gson
 import kotlinx.android.parcel.Parcelize
-import kotlin.time.TimeSource
 
 @Parcelize
 data class Hotel(

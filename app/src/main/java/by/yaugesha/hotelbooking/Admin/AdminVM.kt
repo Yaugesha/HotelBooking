@@ -11,7 +11,6 @@ import by.yaugesha.hotelbooking.DataClasses.User
 import by.yaugesha.hotelbooking.Model
 import java.io.ByteArrayOutputStream
 import java.util.*
-import kotlin.collections.HashMap
 
 class AdminViewModel: ViewModel() {
 

@@ -36,7 +36,6 @@ import androidx.navigation.NavController
 import by.yaugesha.hotelbooking.Admin.AdminViewModel
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.Screen
-import by.yaugesha.hotelbooking.Main.Screens.SortAmenities
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.P)

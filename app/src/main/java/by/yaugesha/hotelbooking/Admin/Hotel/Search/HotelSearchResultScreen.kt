@@ -1,7 +1,6 @@
 package by.yaugesha.hotelbooking.Admin.Hotel
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,6 +29,7 @@ import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Screen
+import by.yaugesha.hotelbooking.DataClasses.Search
 import by.yaugesha.hotelbooking.Main.SearchHotelParametersBar
 import coil.compose.AsyncImage
 import kotlinx.coroutines.Deferred
@@ -91,7 +91,7 @@ fun HotelSearchResultScreen(navController: NavController, searchParameter: Strin
     Column( modifier = Modifier
         .background(BackgroundColor)
         .fillMaxHeight()) {
-        SearchHotelParametersBar(navController)
+        SearchHotelParametersBar(navController, Search())
         Button(
             onClick = {
                 navController.navigate(Screen.AddHotelScreen.route)

@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,9 +28,7 @@ import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.BarItem
 import by.yaugesha.hotelbooking.DataClasses.BottomBar
-import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Screen
-import by.yaugesha.hotelbooking.Main.SearchField
 import by.yaugesha.hotelbooking.R
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async

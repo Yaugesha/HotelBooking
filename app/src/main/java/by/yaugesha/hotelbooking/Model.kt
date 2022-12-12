@@ -5,14 +5,14 @@ import by.yaugesha.hotelbooking.DataClasses.Booking
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.User
-import com.google.firebase.database.*
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import java.util.*
-import kotlin.collections.HashMap
 
 class Model {
     var user = User()

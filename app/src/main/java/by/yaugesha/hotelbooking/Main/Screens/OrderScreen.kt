@@ -37,8 +37,6 @@ import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.Search
 import by.yaugesha.hotelbooking.Main.LittleNumberInputField
 import by.yaugesha.hotelbooking.Main.MainViewModel
-import by.yaugesha.hotelbooking.Main.ShowDatePicker1
-import by.yaugesha.hotelbooking.Main.ShowDatePicker2
 import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
 import kotlinx.coroutines.Deferred

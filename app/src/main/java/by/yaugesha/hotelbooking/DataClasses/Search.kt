@@ -5,7 +5,7 @@ import android.os.Parcelable
 import androidx.navigation.NavType
 import com.google.gson.Gson
 import kotlinx.android.parcel.Parcelize
-import java.util.Date
+import java.util.*
 
 @Parcelize
 data class Search (
@@ -13,7 +13,8 @@ data class Search (
     var guests: Int = 0,
     var checkInDate: Date = Date(),
     var checkOutDate: Date = Date(),
-    var rooms: Int = 0
+    var rooms: Int = 0,
+    var sorts: Sort = Sort()
  ): Parcelable
 
 class SearchType: NavType<Search>(isNullableAllowed = false) {

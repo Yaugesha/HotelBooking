@@ -6,8 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import by.yaugesha.hotelbooking.Admin.Hotel.Add.AddRoom
-import by.yaugesha.hotelbooking.Admin.Hotel.Edit.EditRoomScreen
+import by.yaugesha.hotelbooking.Authorization.Screens.LoginScreen
 import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.Main.Screens.*
 
@@ -21,6 +20,10 @@ fun MainNavigation(login: String) {
         /*{ entry ->
             entry.arguments?.getString("login")?.let { AdminMenuScreen(navController = navController*//*, login = login*//*) }
         }*/
+
+        composable(route = Screen.LoginScreen.route) {
+            LoginScreen(navController = navController)
+        }
 
         composable(route = Screen.FavoritesScreen.route) {
             FavoritesScreen(navController = navController)
@@ -91,15 +94,19 @@ fun MainNavigation(login: String) {
         }
 
         composable(
-            route = Screen.SortScreen.route + "/{isBook}",
+            route = Screen.SortScreen.route + "/{searchData}/{isBook}",
             arguments = listOf(
+                navArgument("searchData") {
+                    type = SearchType()
+                },
                 navArgument("isBook") {
                     type = NavType.BoolType
                 }
             )
             ) { entry ->
+            val searchData = entry.arguments?.getParcelable<Search>("searchData")
             entry.arguments?.getBoolean("isBook")
-                ?.let { SortScreen(navController = navController, isBook = it) }
+                ?.let { SortScreen(navController = navController, searchData = searchData!!, isBook = it) }
             }
 
         composable(route = Screen.EditBookingScreen.route + "/{room}/{hotel}/{booking}",

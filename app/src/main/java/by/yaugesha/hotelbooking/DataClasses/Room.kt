@@ -2,7 +2,6 @@ package by.yaugesha.hotelbooking.DataClasses
 
 import android.os.Bundle
 import android.os.Parcelable
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.navigation.NavType
 import com.google.gson.Gson
 import kotlinx.android.parcel.Parcelize

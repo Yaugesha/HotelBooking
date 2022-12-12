@@ -31,10 +31,8 @@ import androidx.navigation.NavController
 import by.yaugesha.hotelbooking.Admin.AdminViewModel
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.Screen
-import by.yaugesha.hotelbooking.Main.Screens.SortAmenities
 import by.yaugesha.hotelbooking.R
 import com.commandiron.wheel_picker_compose.WheelTextPicker
-import okhttp3.internal.immutableListOf
 
 @Composable
 fun AddRoom(navController: NavController, hotelId: String) {

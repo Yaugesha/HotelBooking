@@ -14,9 +14,7 @@ import by.yaugesha.hotelbooking.Admin.Hotel.Edit.EditRoomScreen
 import by.yaugesha.hotelbooking.Admin.Hotel.Edit.HotelScreen
 import by.yaugesha.hotelbooking.Admin.Hotel.HotelSearchResultScreen
 import by.yaugesha.hotelbooking.Admin.User.SearchUserScreen
-import by.yaugesha.hotelbooking.Athorisation.Screens.RegistrationScreen
 import by.yaugesha.hotelbooking.DataClasses.*
-import by.yaugesha.hotelbooking.Main.UserSearchScreen
 
 @Composable
 fun AdminNavigation(login: String) {

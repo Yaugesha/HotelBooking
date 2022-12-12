@@ -6,6 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.DatePicker
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,10 +35,7 @@ import by.yaugesha.hotelbooking.Admin.Hotel.HelpList
 import by.yaugesha.hotelbooking.Admin.Hotel.HotelSearchField
 import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
-import by.yaugesha.hotelbooking.DataClasses.BarItem
-import by.yaugesha.hotelbooking.DataClasses.BottomBar
-import by.yaugesha.hotelbooking.DataClasses.Screen
-import by.yaugesha.hotelbooking.DataClasses.Search
+import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.R
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
@@ -45,6 +46,9 @@ import java.util.*
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "SimpleDateFormat")
 @Composable
 fun UserSearchScreen(navController: NavController) {
+
+    BackPressHandler(onBackPressed = {})
+
     val context = LocalContext.current
     val hotelImage = (painterResource(id = R.drawable.stokehotel))
     val bottomItems = listOf(BarItem.Search, BarItem.Favorites, BarItem.Bookings, BarItem.Profile)
@@ -80,7 +84,8 @@ fun UserSearchScreen(navController: NavController) {
                 Button(
                     onClick = {
                         val searchData = Search(location = location.value, checkInDate = formatter.parse(arrivalDate.value)!!,
-                            checkOutDate = formatter.parse(departureDate.value)!!, guests = guests.value.toInt(), rooms = rooms.value.toInt()
+                            checkOutDate = formatter.parse(departureDate.value)!!, guests = guests.value.toInt(), rooms = rooms.value.toInt(),
+                            sorts = Sort()
                             )
                         val searchJson = Uri.encode(Gson().toJson(searchData))
                         navController.navigate(Screen.UserSearchResultScreen.route + "/" + searchJson.toString())
@@ -326,6 +331,31 @@ fun UsersSearchHotelFields(
                 LittleNumberInputField(rooms)
 
             }
+        }
+    }
+}
+
+@Composable
+fun BackPressHandler(
+    backPressedDispatcher: OnBackPressedDispatcher? =
+        LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher,
+    onBackPressed: () -> Unit
+) {
+    val currentOnBackPressed by rememberUpdatedState(newValue = onBackPressed)
+
+    val backCallback = remember {
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                currentOnBackPressed()
+            }
+        }
+    }
+
+    DisposableEffect(key1 = backPressedDispatcher) {
+        backPressedDispatcher?.addCallback(backCallback)
+
+        onDispose {
+            backCallback.remove()
         }
     }
 }

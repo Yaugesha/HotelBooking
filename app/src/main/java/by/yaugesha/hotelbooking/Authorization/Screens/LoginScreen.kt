@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.TextFieldColor
 import by.yaugesha.hotelbooking.DataClasses.Screen
+import by.yaugesha.hotelbooking.Main.BackPressHandler
 import by.yaugesha.hotelbooking.Main.MainActivity
 import by.yaugesha.hotelbooking.R
 import kotlinx.coroutines.CoroutineScope
@@ -42,8 +44,11 @@ import kotlinx.coroutines.runBlocking
 
 @Composable
 fun LoginScreen(navController: NavController) {
-    val login = rememberSaveable { mutableStateOf("user") }//"admin"user
-    val password = rememberSaveable { mutableStateOf("Useruser01") }//"admin01"Useruser01
+
+    BackPressHandler(onBackPressed = {})
+
+    val login = remember { mutableStateOf("user") }//"admin"user
+    val password = remember { mutableStateOf("Useruser01") }//"admin01"Useruser01
     val context = LocalContext.current
     val vm = AuthViewModel()
 

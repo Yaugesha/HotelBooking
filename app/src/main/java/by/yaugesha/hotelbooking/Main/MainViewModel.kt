@@ -2,7 +2,10 @@ package by.yaugesha.hotelbooking.Main
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import by.yaugesha.hotelbooking.DataClasses.*
+import by.yaugesha.hotelbooking.DataClasses.Booking
+import by.yaugesha.hotelbooking.DataClasses.Hotel
+import by.yaugesha.hotelbooking.DataClasses.Room
+import by.yaugesha.hotelbooking.DataClasses.Search
 import by.yaugesha.hotelbooking.Model
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -37,7 +40,7 @@ class MainViewModel: ViewModel() {
         var city = ""
         var country = ""
         val hotelList = mutableListOf<Hotel>()
-        val roomList = mutableListOf<Room>()
+        var roomList = mutableListOf<Room>()
         for(i in searchData.location.indices){
             if(searchData.location[i] == ',') {
                 city = searchData.location.take(i)
@@ -51,9 +54,45 @@ class MainViewModel: ViewModel() {
             }
         }
         val formatter = SimpleDateFormat("dd.MM.yyyy")
-        hotelList.forEach { roomList.addAll(model.findRoomsByHotelId(it.hotelId)?.values!!.toList())}
-        roomList.removeIf{ it.peopleCapacity < searchData.guests  }
-        roomList.sortedBy{ it.peopleCapacity }
+
+        /*if(searchData.sorts.mapOfAmenities.all{ it.value != false})
+            hotelList.removeIf{
+                        it.amenities.all { (amenity, value) -> searchData.sorts.mapOfAmenities[amenity] == value }
+                    }*/
+        hotelList.forEach {
+            model.findRoomsByHotelId(it.hotelId)?.values!!.toList().forEach {
+                room ->
+                    room.amenities += it.amenities
+                    roomList.add(room)
+            }
+        }
+
+        roomList.removeIf{ it.peopleCapacity < searchData.guests }
+
+        if(searchData.sorts.maxPrice != 0 && searchData.sorts.minPrice != 0)
+            roomList.removeIf { it.price < searchData.sorts.minPrice || it.price > searchData.sorts.maxPrice }
+
+        if(searchData.sorts.numberOfDoubleBeds != 0 || searchData.sorts.numberOfSingleBeds != 0)
+            roomList.removeIf {
+                it.numberOfDoubleBeds < searchData.sorts.numberOfDoubleBeds ||
+                it.numberOfSingleBeds < searchData.sorts.numberOfSingleBeds
+            }
+
+        Log.i("rooms:",  "$roomList")
+        Log.i("rooms:",  "${searchData.sorts.mapOfAmenities}")
+        if(searchData.sorts.mapOfAmenities.any{ it.value == true }) {
+            Log.i("rooms:", "$roomList")
+            roomList.removeIf {
+                searchData.sorts.mapOfAmenities.any { (amenity, value) -> it.amenities[amenity] != value }
+            }
+        }
+
+        if (roomList.isEmpty()) {
+            Log.i("rooms:", "$roomList")
+            return roomList
+        }
+
+        roomList = roomList.sortedBy{ it.peopleCapacity } as MutableList<Room>
         var listOfBookings: List<Booking>
         var resultRoomList = mutableListOf<Room>()
         roomList.forEach{ it ->

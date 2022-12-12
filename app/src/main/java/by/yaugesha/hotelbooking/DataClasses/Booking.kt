@@ -5,8 +5,6 @@ import android.os.Parcelable
 import androidx.navigation.NavType
 import com.google.gson.Gson
 import kotlinx.android.parcel.Parcelize
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Parcelize
 data class Booking(

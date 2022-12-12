@@ -1,26 +1,23 @@
 package by.yaugesha.hotelbooking.Main
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
@@ -37,42 +34,51 @@ import kotlin.math.abs
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun UserSearchResultScreen(navController: NavController, searchData: Search) {
+
+    BackPressHandler(onBackPressed = {navController.navigate(Screen.UserSearchScreen.route)})
+
+    Log.i("Sorts", searchData.sorts.toString())
     val vm = MainViewModel()
     var roomList: List<Room> = listOf()
     vm.viewModelScope.launch {roomList = setRoomList(vm, searchData)}
-    Column(modifier = Modifier
-        .background(BackgroundColor)
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState())) {
-        if (roomList.isEmpty()) {
-            Row(modifier = Modifier.fillMaxSize().wrapContentHeight(Alignment.CenterVertically)) {
-                Text(
-                    text = "No rooms found", fontSize = 40.sp,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(Alignment.Center)
-                        /*.wrapContentWidth(Alignment.CenterHorizontally)*/
-                        .wrapContentHeight(Alignment.CenterVertically)
-                )
-            }
-        } else {
-            SearchHotelParametersBar(navController)
-            Spacer(modifier = Modifier.padding(top = 36.dp))
-            for (i in roomList.indices) {
-                val hotel = rememberSaveable { mutableStateOf(Hotel()) }
-                vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, roomList[i].hotelID) }
-                Log.i("Hotel", hotel.toString())
+    Column (modifier = Modifier.background(BackgroundColor)) {
+        SearchHotelParametersBar(navController, searchData)
+        Spacer(modifier = Modifier.padding(top = 36.dp))
 
-                HotelCardDescriptionForUser(navController, vm, searchData, roomList[i], hotel.value)
+        Column(modifier = Modifier
+            .background(BackgroundColor)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())) {
+            if (roomList.isEmpty()) {
+                Row(modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentHeight(Alignment.CenterVertically)) {
+                    Text(
+                        text = "No rooms found", fontSize = 40.sp,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(Alignment.Center)
+                            /*.wrapContentWidth(Alignment.CenterHorizontally)*/
+                            .wrapContentHeight(Alignment.CenterVertically)
+                    )
+                }
+            } else {
+                for (i in roomList.indices) {
+                    val hotel = rememberSaveable { mutableStateOf(Hotel()) }
+                    vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, roomList[i].hotelID) }
+                    Log.i("Hotel", hotel.toString())
 
-                Spacer(modifier = Modifier.padding(top = 20.dp))
-            }
-        }
+                    HotelCardDescriptionForUser(navController, vm, searchData, roomList[i], hotel.value)
+
+                    Spacer(modifier = Modifier.padding(top = 20.dp))
+                }
+
+            }}
     }
 }
 
 @Composable
-fun SearchHotelParametersBar(navController: NavController) {
+fun SearchHotelParametersBar(navController: NavController, searchData: Search) {
     Card(
         shape = (RoundedCornerShape(24.dp)),
         backgroundColor = Color.White,
@@ -90,7 +96,8 @@ fun SearchHotelParametersBar(navController: NavController) {
             modifier = Modifier
                 .padding(start = 52.dp, end = 238.dp)
                 .clickable {
-                    navController.navigate(Screen.SortScreen.route + "/" + "true")
+                    val searchJson = Uri.encode(Gson().toJson(searchData))
+                    navController.navigate(Screen.SortScreen.route + "/" + searchJson.toString() + "/" + "true")
                 }
         ) {
             Icon(
