@@ -35,12 +35,13 @@ import com.google.gson.Gson
 fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean = true) {
     Log.i("got", isBook.toString())
     val guests = 3
-    val minPrice = remember { mutableStateOf("0") }
-    val maxPrice = remember { mutableStateOf("0") }
-    val numberOfDoubleBeds = remember { mutableStateOf(0) }
-    val numberOfSingleBeds = remember { mutableStateOf(0) }
+    val minPrice = remember { mutableStateOf(searchData.sorts.minPrice.toString()) }
+    val maxPrice = remember { mutableStateOf(searchData.sorts.maxPrice.toString()) }
+    val numberOfDoubleBeds = remember { mutableStateOf(searchData.sorts.numberOfDoubleBeds) }
+    val numberOfSingleBeds = remember { mutableStateOf(searchData.sorts.numberOfSingleBeds) }
     val status = remember { mutableStateOf("") }
-    val mapOfAmenities = rememberSaveable { searchData.sorts.mapOfAmenities}
+    var mapOfAmenities = rememberSaveable { searchData.sorts.mapOfAmenities}
+    Log.i("got amenities:",  "${searchData.sorts.mapOfAmenities}")
 
     Column(
         modifier = Modifier
@@ -48,7 +49,7 @@ fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean
             .padding(top = 24.dp, start = 12.dp, end = 12.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text(text = "Price", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text(text = "Price\$:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.padding(8.dp))
         //Divider(color = Color.Black, modifier = Modifier.fillMaxWidth())
         Row {
@@ -210,8 +211,14 @@ fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean
             Text(text = "Apply", fontSize = 20.sp, color = Color.White)
         }
         Spacer(modifier = Modifier.padding(12.dp))
-        /*Button(
-            onClick = {  },
+        Button(
+            onClick = {
+                minPrice.value = ""
+                maxPrice.value = ""
+                numberOfDoubleBeds.value = 0
+                numberOfSingleBeds.value = 0
+                mapOfAmenities = Search().sorts.mapOfAmenities
+            },
             colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
             shape = (RoundedCornerShape(16.dp)),
             modifier = Modifier
@@ -220,7 +227,7 @@ fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean
                 .padding(start = 12.dp, end = 12.dp)
         ) {
             Text(text = "Clear", fontSize = 20.sp, color = Color.White)
-        }*/
+        }
         Spacer(modifier = Modifier.padding(24.dp))
 
     }
@@ -230,6 +237,10 @@ fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean
 fun SortAmenities(text: String, mapOfSort: HashMap<String, Boolean>) {
     val color = remember { mutableStateOf(Color.White) }
     val textColor = remember { mutableStateOf(Color.Black) }
+    if( mapOfSort[text] == true){
+        color.value = ButtonColor
+        textColor.value = Color.White
+    }
     Button(
         onClick = {
             if(color.value == Color.White) {

@@ -3,24 +3,19 @@ package by.yaugesha.hotelbooking.Main.Screens
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.util.Log
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
@@ -29,30 +24,31 @@ import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.Main.FavoriteButton
 import by.yaugesha.hotelbooking.Main.MainViewModel
-import by.yaugesha.hotelbooking.Main.SortDialogButton
 import by.yaugesha.hotelbooking.Main.setHotelForRoom
-import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
 import com.google.gson.Gson
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.*
+
+fun <T> SnapshotStateList<T>.swapList(newList: List<T>){
+    clear()
+    addAll(newList)
+}
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "CoroutineCreationDuringComposition",
     "SuspiciousIndentation"
 )
 @Composable
 fun BookingsScreen(navController: NavController) {
-    val context = LocalContext.current
     val vm = MainViewModel()
-    var bookingsList: List<Booking> = listOf()
-    vm.viewModelScope.launch {bookingsList = setListOfUserBookings(vm, "user")}
-    Log.i("got UserBookings:",  "$bookingsList")
+    val bookingsList = remember { mutableStateListOf<Booking>()}
+    var allBookings = listOf<Booking>()
+    val sort = remember { mutableStateOf("")}
+    vm.viewModelScope.launch {allBookings = setListOfUserBookings(vm, "user")}
+    bookingsList.swapList(allBookings)
+    Log.i("allBookings:",  "$allBookings")
 
     val bottomItems = listOf(BarItem.Search, BarItem.Favorites, BarItem.Bookings, BarItem.Profile)
         Scaffold(
@@ -69,12 +65,11 @@ fun BookingsScreen(navController: NavController) {
                         modifier = Modifier
                             .fillMaxSize()
                             .wrapContentSize(Alignment.Center)
-                            /*.wrapContentWidth(Alignment.CenterHorizontally)*/
                             .wrapContentHeight(Alignment.CenterVertically)
                     )
                 }
             } else {
-                BookingsParametersBar(navController)
+                BookingsParametersBar(bookingsList, allBookings)
                 Column(
                     modifier = Modifier
                         .padding(top = 120.dp, bottom = 68.dp)
@@ -86,6 +81,7 @@ fun BookingsScreen(navController: NavController) {
                         Log.i("got room:", room.toString())
                         val hotel = rememberSaveable { mutableStateOf(Hotel()) }
                         vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, room.hotelID) }
+                        if (sort.value  == "" || sort.value == vm.defineStatusOfBooking(bookingsList[i]))
                         Card(
                             shape = (RoundedCornerShape(24.dp)),
                             backgroundColor = Color.White,
@@ -111,12 +107,8 @@ fun BookingsScreen(navController: NavController) {
                                 }
                                 FavoriteButton(vm, "user", room.roomId)
                             }
-                            BookingDescriptionCard(
-                                navController,
-                                bookingsList[i],
-                                room,
-                                hotel.value
-                            )
+                            BookingDescriptionCard(navController, bookingsList[i], room, hotel.value,
+                                vm.defineStatusOfBooking(bookingsList[i]))
                         }
                         Spacer(modifier = Modifier.padding(top = 20.dp))
                     }
@@ -126,7 +118,7 @@ fun BookingsScreen(navController: NavController) {
 }
 
 @Composable
-fun BookingDescriptionCard(navController: NavController, booking: Booking, room: Room, hotel: Hotel) {
+fun BookingDescriptionCard(navController: NavController, booking: Booking, room: Room, hotel: Hotel, status: String) {
     Column(
         modifier = Modifier
             .padding(top = 8.dp, start = 152.dp, bottom = 8.dp, end = 18.dp)
@@ -151,19 +143,6 @@ fun BookingDescriptionCard(navController: NavController, booking: Booking, room:
                     Text(text = booking.cost.toString(), fontSize = 14.sp)
                 }
                 Spacer(modifier = Modifier.padding(top = 2.dp))
-
-                val formatter = SimpleDateFormat("dd.MM.yyyy")
-                val status: String = if(booking.status == "active") {
-                    if (formatter.parse(booking.checkInDate).time >= Date.from(
-                            LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
-                        ).time
-                    )
-                        "current"
-                    else
-                        "old"
-                } else {
-                    booking.status
-                }
                 Text(
                     text = hotel.city + ", " + hotel.country + "\n" + booking.checkInDate + "-" + booking.checkOutDate
                     + "\nStatus: " + status,
@@ -180,12 +159,11 @@ fun BookingDescriptionCard(navController: NavController, booking: Booking, room:
             Button(
                 onClick =
                 {
-                    val formatter = SimpleDateFormat("dd.MM.yyyy")
                     val roomJson = Uri.encode(Gson().toJson(room))
                     val hotelJson = Uri.encode(Gson().toJson(hotel))
                     val bookingJson = Uri.encode(Gson().toJson(booking))
                     navController.navigate(Screen.EditBookingScreen.route + "/" + roomJson.toString()
-                            + "/" + hotelJson.toString() + "/" + bookingJson.toString())
+                            + "/" + hotelJson.toString() + "/" + bookingJson.toString() + "/" + status)
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                 shape = (RoundedCornerShape(16.dp)),
@@ -205,7 +183,9 @@ fun BookingDescriptionCard(navController: NavController, booking: Booking, room:
 }
 
 @Composable
-fun BookingsParametersBar(navController: NavController) {
+fun BookingsParametersBar(bookingsList: SnapshotStateList<Booking>, allBooking: List<Booking>) {
+    val listOfSorts = remember { listOf("Booked", "Current", "Old", "Canceled", ) }
+    val selectedOption = remember { mutableStateOf("All") }
     Card(
         shape = (RoundedCornerShape(24.dp)),
         backgroundColor = Color.White,
@@ -216,81 +196,41 @@ fun BookingsParametersBar(navController: NavController) {
             .width(360.dp)
             .height(60.dp)
     ) {
-        Card(
-            shape = (RoundedCornerShape(24.dp)),
-            elevation = 0.dp,
-            border = BorderStroke(0.dp, Color.White),
-            modifier = Modifier
-                .padding(start = 52.dp, end = 238.dp)
-                .clickable {
-                    navController.navigate(Screen.SortScreen.route + "/" + "false")
+        Row(modifier = Modifier.fillMaxWidth(),Arrangement.SpaceEvenly, Alignment.CenterVertically) {
+            listOfSorts.forEach {
+                val selected = selectedOption.value == it
+                val vm = MainViewModel()
+                Card(
+                    backgroundColor = if(selected) {ButtonColor} else {Color.White},
+                    shape = (RoundedCornerShape(32.dp)),
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(36.dp)
+                        .selectable(
+                        selected = selected,
+                        onClick = {
+                            if(!selected) {
+                                bookingsList.swapList(allBooking)
+                                bookingsList.swapList(vm.sortBookings(bookingsList.toMutableList(), it))
+                                selectedOption.value = it
+                            }
+                            else {
+                                bookingsList.swapList(allBooking)
+                                selectedOption.value = ""
+                            }
+                        }
+                    )
+                ) {
+                    Text(
+                        text = it, fontSize = 12.sp, color = if(selected) {Color.White} else {Color.Black},
+                        modifier = Modifier.wrapContentSize(Alignment.Center)
+                    )
                 }
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_tune),
-                contentDescription = "Filters",
-                modifier = Modifier
-                    .wrapContentWidth(Alignment.Start)
-                    .wrapContentHeight(Alignment.CenterVertically)
-            )
-            Text(
-                text = "Filters", fontSize = 14.sp,
-                modifier = Modifier
-                    .wrapContentWidth(Alignment.End)
-                    .wrapContentHeight(Alignment.CenterVertically)
-            )
-        }
-
-        val openSortDialog = remember { mutableStateOf(false) }
-        Card(
-            shape = (RoundedCornerShape(24.dp)),
-            elevation = 0.dp,
-            border = BorderStroke(0.dp, Color.White),
-            modifier = Modifier
-                .padding(start = 250.dp, end = 52.dp)
-                .clickable {
-                    openSortDialog.value = true
-                }
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_sort),
-                contentDescription = "Sort",
-                modifier = Modifier
-                    .wrapContentWidth(Alignment.Start)
-                    .wrapContentHeight(Alignment.CenterVertically)
-            )
-            Text(
-                text = "Sort", fontSize = 14.sp,
-                modifier = Modifier
-                    .wrapContentWidth(Alignment.End)
-                    .wrapContentHeight(Alignment.CenterVertically)
-            )
-        }
-        if(openSortDialog.value) {
-            AlertDialog(
-                onDismissRequest = { openSortDialog.value = false },
-                title = { Text(text = "Sort by") },
-                shape = RoundedCornerShape(24.dp),
-                backgroundColor = Color.White.copy(alpha = 0.8f),
-                modifier = Modifier.width(180.dp),
-                buttons = {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(start = 8.dp, end = 8.dp)
-                    ) {
-                        SortDialogButton(openSortDialog, "Price min")
-                        SortDialogButton(openSortDialog, "Price max")
-                        SortDialogButton(openSortDialog, "Square max")
-                        SortDialogButton(openSortDialog, "Square min")
-                        SortDialogButton(openSortDialog, "Date new")
-                        SortDialogButton(openSortDialog, "Date old")
-                        //SortDialogButton(openSortDialog, "Amenities")
-                    }
-                }
-            )
+            }
         }
     }
 }
+
 
 suspend fun setListOfUserBookings(vm: MainViewModel, login: String): List<Booking> {
     val result: Deferred<List<Booking>>

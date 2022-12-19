@@ -36,6 +36,7 @@ import by.yaugesha.hotelbooking.Admin.Hotel.HotelSearchField
 import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.*
+import by.yaugesha.hotelbooking.Main.Screens.LoadingAnimation
 import by.yaugesha.hotelbooking.R
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
@@ -113,8 +114,6 @@ fun UserSearchScreen(navController: NavController) {
                         textAlign = TextAlign.Center,
                     )
                 }
-                SearchButton(context, "SearchResultActivity")
-
                 Text(
                     text = "Search Hotel", fontSize = 24.sp,
                     modifier = Modifier.padding(start = 36.dp, top = 30.dp)
@@ -199,31 +198,6 @@ fun ShowDatePicker2(context: Context, departureDate: MutableState<String>){
             Text(text = departureDate.value)
         }
     }
-}
-
-@Composable
-fun SearchButton(context: Context, interaction: String) {
-    Button(
-        onClick = { context.startActivity(Intent(context, interaction::class.java) ) },
-        colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
-        shape = (RoundedCornerShape(24.dp)),
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentWidth(Alignment.CenterHorizontally)
-            .height(44.dp)
-            .width(182.dp)
-            .padding(top = 490.dp, bottom = 44.dp)
-    )
-    {
-        Text(
-            text = "Search",
-            fontSize = 16.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-        )
-    }
-
 }
 
 //City search

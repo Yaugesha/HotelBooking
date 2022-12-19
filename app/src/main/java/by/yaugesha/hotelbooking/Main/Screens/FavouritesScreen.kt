@@ -47,7 +47,7 @@ fun FavoritesScreen(navController: NavController) {
     Scaffold(
         bottomBar = { BottomBar(navController, bottomItems) }
     ) {
-       // SearchHotelParametersBar(navController, Search())
+        SearchHotelParametersBar(navController, Search())
         Column(
             modifier = Modifier
                 .padding(top = 120.dp, bottom = 68.dp)

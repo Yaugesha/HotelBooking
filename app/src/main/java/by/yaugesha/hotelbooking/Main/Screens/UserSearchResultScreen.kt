@@ -40,7 +40,9 @@ fun UserSearchResultScreen(navController: NavController, searchData: Search) {
     Log.i("Sorts", searchData.sorts.toString())
     val vm = MainViewModel()
     var roomList: List<Room> = listOf()
-    vm.viewModelScope.launch {roomList = setRoomList(vm, searchData)}
+    vm.viewModelScope.launch {
+        roomList = setRoomList(vm, searchData)
+    }
     Column (modifier = Modifier.background(BackgroundColor)) {
         SearchHotelParametersBar(navController, searchData)
         Spacer(modifier = Modifier.padding(top = 36.dp))
@@ -73,7 +75,8 @@ fun UserSearchResultScreen(navController: NavController, searchData: Search) {
                     Spacer(modifier = Modifier.padding(top = 20.dp))
                 }
 
-            }}
+            }
+        }
     }
 }
 
@@ -209,7 +212,6 @@ fun HotelCardDescriptionForUser(navController: NavController, vm: MainViewModel,
                 isFavorite.value = isRoomInFavorites(vm, room.roomId, "user")
             }
             FavoriteButton(vm, "user", room.roomId/*, isFavorite.value*/)
-            Log.i("room in ${room.roomId}", isFavorite.value.toString())
         }
         Column(
             modifier = Modifier

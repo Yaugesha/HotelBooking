@@ -201,12 +201,20 @@ class Model {
         return userData
     }
 
+    suspend fun getUser(login: String): User? {
+        return dataBase.child("Users").child(login).get().await().getValue<User>()
+    }
+
     suspend fun getUserPassword(login: String): String {
         return dataBase.child("Users").child(login).child("password").get().await().value.toString()
     }
 
     suspend fun loadListOfUsers(): HashMap<String, User> {
         return dataBase.child("Users").get().await().getValue<HashMap<String, User>>()!!
+    }
+
+    suspend fun loadListOfBookings(): HashMap<String, Booking> {
+        return dataBase.child("Bookings").get().await().getValue<HashMap<String, Booking>>()!!
     }
 
     fun updateRoom(room: Room, image: ByteArray? = null, roomMap: Map<String, Any>) {
@@ -230,6 +238,14 @@ class Model {
             }
         }
         dataBase.child("Hotels").child(room.hotelID).child("status").setValue("active")
+    }
+
+    fun updateUser(login: String, userMap: Map<String, String>) {
+        dataBase.child("Users").child(login).updateChildren(userMap)
+    }
+
+    fun updatePassword(userId: String, password: String) {
+        dataBase.child("Users").child(userId).child("password").setValue(password)
     }
 
     fun updateHotel(hotel: Hotel, image: ByteArray? = null, hotelMap: Map<String, Any>) {

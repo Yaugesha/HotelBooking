@@ -1,35 +1,54 @@
 package by.yaugesha.hotelbooking.Main
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import by.yaugesha.hotelbooking.DataClasses.Booking
-import by.yaugesha.hotelbooking.DataClasses.Hotel
-import by.yaugesha.hotelbooking.DataClasses.Room
-import by.yaugesha.hotelbooking.DataClasses.Search
+import androidx.lifecycle.viewModelScope
+import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.Model
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.ZoneId
+import java.util.*
+import kotlin.collections.HashMap
 
 class MainViewModel: ViewModel() {
 
     val model = Model()
 
-    suspend fun isPasswordCorrect(userId: String, newPassword: String): Boolean {
+    suspend fun getUser(login: String): User {
+       return model.getUser(login)!!
+    }
+
+    fun updateUser(user: User) {
+        val userMap = mapOf<String, String>(
+            "login" to user.login,
+            "email" to user.email,
+            "name" to user.name,
+            "surname" to user.surname
+        )
+        model.updateUser(user.login, userMap)
+    }
+
+    fun updateUserPassword(userId: String, password: String) {
+        model.updatePassword(userId, password)
+    }
+
+    fun isPasswordCorrect(userId: String, password: String, currentPassword: String): Boolean {
         val md = MessageDigest.getInstance("MD5")
-        val bigInt = BigInteger(1, md.digest(newPassword.toByteArray(Charsets.UTF_8)))
+        val bigInt = BigInteger(1, md.digest(password.toByteArray(Charsets.UTF_8)))
         val md5Pass = String.format("%032x", bigInt)
-        val currentPassword = model.getUserPassword(userId)
         return md5Pass == currentPassword
     }
 
     fun setUserPassword(password: String) {
         val md = MessageDigest.getInstance("MD5")
         val bigInt = BigInteger(1, md.digest(password.toByteArray(Charsets.UTF_8)))
-        model.user.password =  String.format("%032x", bigInt)
+        model.user.password = String.format("%032x", bigInt)
     }
 
     fun isPasswordSuitable(password: String): Boolean {
@@ -63,6 +82,7 @@ class MainViewModel: ViewModel() {
             model.findRoomsByHotelId(it.hotelId)?.values!!.toList().forEach {
                 room ->
                     room.amenities += it.amenities
+               // Log.i("${it.name} added room:",  "$room")
                     roomList.add(room)
             }
         }
@@ -78,8 +98,6 @@ class MainViewModel: ViewModel() {
                 it.numberOfSingleBeds < searchData.sorts.numberOfSingleBeds
             }
 
-        Log.i("rooms:",  "$roomList")
-        Log.i("rooms:",  "${searchData.sorts.mapOfAmenities}")
         if(searchData.sorts.mapOfAmenities.any{ it.value == true }) {
             Log.i("rooms:", "$roomList")
             roomList.removeIf {
@@ -93,12 +111,13 @@ class MainViewModel: ViewModel() {
         }
 
         roomList = roomList.sortedBy{ it.peopleCapacity } as MutableList<Room>
+
         var listOfBookings: List<Booking>
         var resultRoomList = mutableListOf<Room>()
         roomList.forEach{ it ->
             val mapOfRoomBookings = model.findBookingsOFRoom(it.roomId)?.values
             if(mapOfRoomBookings != null) {
-                listOfBookings = model.findBookingsOFRoom(it.roomId)?.values?.toList()!!// bookings for one room type in hotel
+                listOfBookings = model.findBookingsOFRoom(it.roomId)?.values?.toList()!!// bookings for one room in hotel
                 var countOfBookings = 0 // count of bookings which date cross search date
                 listOfBookings.forEach{ booking ->
                     if(!(formatter.parse(booking.checkInDate)?.time!! < searchData.checkInDate.time
@@ -108,9 +127,10 @@ class MainViewModel: ViewModel() {
                         )
                             countOfBookings += booking.amountOfRooms
                     }
+                }
 //                roomList.removeIf { countOfBookings > (it.amountOfRooms - searchData.rooms) }
-                    if(countOfBookings < (it.amountOfRooms - searchData.rooms) && it.amountOfRooms >= searchData.rooms)
-                        resultRoomList.add(it)
+                if(countOfBookings < (it.amountOfRooms - searchData.rooms) && it.amountOfRooms >= searchData.rooms) {
+                    resultRoomList.add(it)
                 }
             }
             else
@@ -223,7 +243,6 @@ class MainViewModel: ViewModel() {
 
     suspend fun getUserBookings(login: String): List<Booking> {
         val listOfBookings = model.findUserBookings(login)?.values ?: return listOf<Booking>()
-        Log.i("got UserBookings:",  "${listOfBookings.toList()}")
         return listOfBookings.toList()
     }
 
@@ -259,5 +278,59 @@ class MainViewModel: ViewModel() {
                 return true
         }
         return false
+    }
+
+    fun defineStatusOfBooking(booking: Booking): String {
+        val formatter = SimpleDateFormat("dd.MM.yyyy")
+       return if(booking.status == "active") {
+            if (formatter.parse(booking.checkInDate).time >= Date.from(
+                    LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                ).time
+            )
+                "booked"
+            else{
+                if (formatter.parse(booking.checkOutDate).time >= Date.from(
+                        LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                    ).time
+                )
+                    "current"
+                else
+                    "old"
+            }
+        } else {
+            booking.status
+        }
+    }
+
+    fun sortBookings (bookings: MutableList<Booking>, parameter: String): List<Booking> {
+        val formatter = SimpleDateFormat("dd.MM.yyyy")
+        when(parameter){
+            "Booked" -> {
+                bookings.removeIf{
+                    formatter.parse(it.checkInDate)!!.time < Date.from(
+                        LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                    ).time || it.status == "canceled"
+                }
+                return bookings
+            }
+            "Current" -> {
+                bookings.removeIf{
+                    formatter.parse(it.checkOutDate)!!.time <= Date.from(
+                        LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
+                    ).time || it.status == "canceled"
+                }
+                return bookings
+            }
+            "Canceled" -> {
+                bookings.removeIf { it.status != "canceled"}
+                return bookings
+            }
+    }
+        bookings.removeIf{
+            formatter.parse(it.checkOutDate)!!.time > Date.from(
+                LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
+            ).time || it.status == "canceled"
+        }
+        return bookings
     }
 }

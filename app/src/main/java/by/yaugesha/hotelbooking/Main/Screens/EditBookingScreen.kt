@@ -44,7 +44,7 @@ import kotlin.math.abs
     "SimpleDateFormat", "CoroutineCreationDuringComposition"
 )
 @Composable
-fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, booking: Booking) {
+fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, booking: Booking, status: String) {
     val amenities: Map<String, Boolean> = room.amenities + hotel.amenities
     val context = LocalContext.current
     val vm = MainViewModel()
@@ -58,104 +58,198 @@ fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, bo
     var oldBooking = booking.bookingId
     val checkBookingData = remember { mutableStateOf(false) }
     val openDeleteDialog = remember { mutableStateOf(false) }
+    val openEditDialog = remember { mutableStateOf(false) }
+
 
     Scaffold(
-        bottomBar = {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                Button(
-                    onClick = {
-                        val newBooking = Booking(
-                            bookingId = UUID.randomUUID().toString(),
-                            user = "user",
-                            room = room.roomId,
-                            checkInDate = arrivalDate.value,
-                            checkOutDate = departureDate.value,
-                            amountOfRooms = amountOfRooms.value.toInt(),
-                            cost = (cost.value),
-                            date = LocalDate.now()
-                                .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
-                        )
-                        vm.viewModelScope.launch {checkBookingData.value = editBookingData(vm, room, newBooking)}
+            bottomBar = {
+                if (status == "booked") {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Button(
+                            onClick = {
+                                openEditDialog.value = true
+                            },
+                            colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                            shape = (RoundedCornerShape(32.dp)),
+                            modifier = Modifier
+                                //.fillMaxWidth()
+                                //.padding(start = 32.dp, end = 32.dp, bottom = 4.dp)
+                                .height(62.dp)
+                                .width(120.dp)
+                        ) {
+                            Text(
+                                text = "Edit",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
-                        Log.i("got value:",  "${checkBookingData.value}")
-                        if(checkBookingData.value == true) {
-                            vm.setBooking(newBooking)
-                            vm.deleteBooking(oldBooking)
-                            oldBooking = newBooking.bookingId
-                        }
-                        else
-                            Toast.makeText(context, "Your request doesn't match", Toast.LENGTH_LONG).show()
-                        /*navController.navigate(Screen.UserSearchResultScreen.route)*/
-                    },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
-                    shape = (RoundedCornerShape(32.dp)),
-                    modifier = Modifier
-                        //.fillMaxWidth()
-                        //.padding(start = 32.dp, end = 32.dp, bottom = 4.dp)
-                        .height(62.dp)
-                        .width(120.dp)
-                ) {
-                    Text(text = "Edit", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                }
-                Button(
-                    onClick = { openDeleteDialog.value = true },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
-                    shape = (RoundedCornerShape(32.dp)),
-                    modifier = Modifier
-                        //.fillMaxWidth()
-                        //.padding(start = 32.dp, end = 32.dp, bottom = 4.dp)
-                        .height(62.dp)
-                        .width(120.dp)
-                ) {
-                    Text(text = "Cancel", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                }
-                if(openDeleteDialog.value) {
-                    AlertDialog(
-                        onDismissRequest = { openDeleteDialog.value = false },
-                        title = { Text(text = "Are you sure?\nYour booking will be canceled.") },
-                        shape = RoundedCornerShape(24.dp),
-                        backgroundColor = Color.White.copy(alpha = 0.8f),
-                        //modifier = Modifier.width(180.dp),
-                        buttons = {
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceAround,
-                                modifier = Modifier.padding(start = 8.dp, end = 8.dp).fillMaxWidth()
-                            ) {
-                                Button(
-                                    onClick = {
-                                        vm.cancelBooking(oldBooking)
-                                        openDeleteDialog.value = false
-                                    },
-                                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
-                                    shape = (RoundedCornerShape(32.dp)),
-                                    modifier = Modifier
-                                        .width(80.dp)
-                                        .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
-                                ) {
-                                    Text(text = "Yes", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+
+                        if (openEditDialog.value) {
+                            AlertDialog(
+                                onDismissRequest = { openDeleteDialog.value = false },
+                                title = { Text(text = "Are you sure?\nYour booking will be edited.") },
+                                shape = RoundedCornerShape(24.dp),
+                                backgroundColor = Color.White,
+                                buttons = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceAround,
+                                        modifier = Modifier
+                                            .padding(start = 8.dp, end = 8.dp)
+                                            .fillMaxWidth()
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                val newBooking = Booking(
+                                                    bookingId = UUID.randomUUID().toString(),
+                                                    user = "user",
+                                                    room = room.roomId,
+                                                    checkInDate = arrivalDate.value,
+                                                    checkOutDate = departureDate.value,
+                                                    amountOfRooms = amountOfRooms.value.toInt(),
+                                                    cost = (cost.value),
+                                                    date = LocalDate.now()
+                                                        .format(
+                                                            DateTimeFormatter.ofLocalizedDate(
+                                                                FormatStyle.SHORT
+                                                            )
+                                                        )
+                                                )
+                                                vm.viewModelScope.launch {
+                                                    checkBookingData.value =
+                                                        editBookingData(vm, room, newBooking)
+                                                }
+
+                                                Log.i("got value:", "${checkBookingData.value}")
+                                                if (checkBookingData.value == true) {
+                                                    vm.setBooking(newBooking)
+                                                    vm.deleteBooking(oldBooking)
+                                                    oldBooking = newBooking.bookingId
+                                                } else
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Your request doesn't match",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                /*navController.navigate(Screen.UserSearchResultScreen.route)*/
+                                                openEditDialog.value = false
+                                            },
+                                            colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                                            shape = (RoundedCornerShape(32.dp)),
+                                            modifier = Modifier
+                                                .width(80.dp)
+                                                .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = "Yes",
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        Button(
+                                            onClick = {
+                                                openEditDialog.value = false
+                                            },
+                                            colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                                            shape = (RoundedCornerShape(32.dp)),
+                                            modifier = Modifier
+                                                .width(80.dp)
+                                                .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = "No",
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        //SortDialogButton(openSortDialog, "Amenities")
+                                    }
                                 }
-                                Button(
-                                    onClick = {
-                                        openDeleteDialog.value = false
-                                    },
-                                    colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
-                                    shape = (RoundedCornerShape(32.dp)),
-                                    modifier = Modifier
-                                        .width(80.dp)
-                                        .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
-                                ) {
-                                    Text(text = "No", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                                }
-                                //SortDialogButton(openSortDialog, "Amenities")
-                            }
+                            )
                         }
-                    )
+
+                        Button(
+                            onClick = { openDeleteDialog.value = true },
+                            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                            shape = (RoundedCornerShape(32.dp)),
+                            modifier = Modifier
+                                //.fillMaxWidth()
+                                //.padding(start = 32.dp, end = 32.dp, bottom = 4.dp)
+                                .height(62.dp)
+                                .width(120.dp)
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        if (openDeleteDialog.value) {
+                            AlertDialog(
+                                onDismissRequest = { openDeleteDialog.value = false },
+                                title = { Text(text = "Are you sure?\nYour booking will be canceled.") },
+                                shape = RoundedCornerShape(24.dp),
+                                backgroundColor = Color.White/*.copy(alpha = 0.8f)*/,
+                                //modifier = Modifier.width(180.dp),
+                                buttons = {
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceAround,
+                                        modifier = Modifier
+                                            .padding(start = 8.dp, end = 8.dp)
+                                            .fillMaxWidth()
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                vm.cancelBooking(oldBooking)
+                                                openDeleteDialog.value = false
+                                            },
+                                            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                                            shape = (RoundedCornerShape(32.dp)),
+                                            modifier = Modifier
+                                                .width(80.dp)
+                                                .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = "Yes",
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        Button(
+                                            onClick = {
+                                                openDeleteDialog.value = false
+                                            },
+                                            colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                                            shape = (RoundedCornerShape(32.dp)),
+                                            modifier = Modifier
+                                                .width(80.dp)
+                                                .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = "No",
+                                                color = Color.White,
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        //SortDialogButton(openSortDialog, "Amenities")
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
             }
-        }
     ) {
         Card(
             shape = RoundedCornerShape(32.dp),

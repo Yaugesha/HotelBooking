@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,34 +68,13 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
     val cost = rememberSaveable { mutableStateOf(nights.value * room.price * rooms.value.toInt()) }
     val checkBookingData = rememberSaveable { mutableStateOf(false) }
     val guests = rememberSaveable { mutableStateOf(searchData.guests.toString()) }
+    val openConfirmDialog = rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
             Button(
                 onClick = {
-                    vm.viewModelScope.launch {checkBookingData.value = checkBookingData(vm, room, Search
-                        (searchData.location, searchData.guests, formatter.parse(arrivalDate.value)!!,
-                        formatter.parse(departureDate.value)!!, rooms.value.toInt()
-                    ))}
-
-                    Log.i("got value:",  "${checkBookingData.value}")
-                    if(checkBookingData.value == true) {
-                        val booking = Booking(
-                            bookingId = UUID.randomUUID().toString(),
-                            user = "user",
-                            room = room.roomId,
-                            guests = guests.value.toInt(),
-                            checkInDate = arrivalDate.value,
-                            checkOutDate = departureDate.value,
-                            amountOfRooms = rooms.value.toInt(),
-                            cost = (cost.value),
-                            date = LocalDate.now()
-                                .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
-                        )
-                        vm.setBooking(booking)
-                    }
-                    else
-                        Toast.makeText(context, "Your request doesn't match", Toast.LENGTH_LONG).show()
+                    openConfirmDialog.value = true
                     /*navController.navigate(Screen.UserSearchResultScreen.route)*/
                 },
                 colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
@@ -106,6 +86,71 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
             ) {
                 Text(text = "Confirm", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
+            if(openConfirmDialog.value) {
+                AlertDialog(
+                    onDismissRequest = { openConfirmDialog.value = false },
+                    title = { Text(text = "Are you sure?", textAlign = TextAlign.Center)  },
+                    shape = RoundedCornerShape(24.dp),
+                    backgroundColor = Color.White,
+                    buttons = {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            modifier = Modifier.padding(start = 8.dp, end = 8.dp).fillMaxWidth()
+                        ) {
+                            Button(
+                                onClick = {
+                                    vm.viewModelScope.launch {checkBookingData.value = checkBookingData(vm, room, Search
+                                        (searchData.location, searchData.guests, formatter.parse(arrivalDate.value)!!,
+                                        formatter.parse(departureDate.value)!!, rooms.value.toInt()
+                                    ))}
+
+                                    Log.i("got value:",  "${checkBookingData.value}")
+                                    if(checkBookingData.value == true &&
+                                        guests.value.toInt() > room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds) {
+                                        val booking = Booking(
+                                            bookingId = UUID.randomUUID().toString(),
+                                            user = "user",
+                                            room = room.roomId,
+                                            guests = guests.value.toInt(),
+                                            checkInDate = arrivalDate.value,
+                                            checkOutDate = departureDate.value,
+                                            amountOfRooms = rooms.value.toInt(),
+                                            cost = (cost.value),
+                                            date = LocalDate.now()
+                                                .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+                                        )
+                                        vm.setBooking(booking)
+                                    }
+                                    else
+                                        Toast.makeText(context, "Your request doesn't match", Toast.LENGTH_LONG).show()
+                                    openConfirmDialog.value = false
+                                },
+                                colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                                shape = (RoundedCornerShape(32.dp)),
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
+                            ) {
+                                Text(text = "Yes", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Button(
+                                onClick = {
+                                    openConfirmDialog.value = false
+                                },
+                                colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                                shape = (RoundedCornerShape(32.dp)),
+                                modifier = Modifier
+                                    .width(80.dp)
+                                    .padding(/*start = 8.dp, end = 32.dp, */bottom = 4.dp)
+                            ) {
+                                Text(text = "No", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            }
+                            //SortDialogButton(openSortDialog, "Amenities")
+                        }
+                    }
+                )
+            }
+
         }
     ) {
         Card(
@@ -191,6 +236,12 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
                         Spacer(modifier = Modifier.padding(4.dp))
 
                         LittleNumberInputField(guests)
+
+                        if(guests.value.toInt() > room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds)
+                            Text(
+                                text = "Number of guests can't be more then ${room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds}",
+                                color = Color.Red, fontSize = 10.sp
+                        )
                     }
 
                     Spacer(modifier = Modifier.padding(start = 68.dp))

@@ -2,6 +2,7 @@ package by.yaugesha.hotelbooking.Main
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
+import androidx.navigation.NavType.Companion.StringType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -109,7 +110,7 @@ fun MainNavigation(login: String) {
                 ?.let { SortScreen(navController = navController, searchData = searchData!!, isBook = it) }
             }
 
-        composable(route = Screen.EditBookingScreen.route + "/{room}/{hotel}/{booking}",
+        composable(route = Screen.EditBookingScreen.route + "/{room}/{hotel}/{booking}/{status}",
             arguments = listOf(
                 navArgument("room") {
                     type = RoomType()
@@ -119,13 +120,17 @@ fun MainNavigation(login: String) {
                 },
                 navArgument("booking") {
                     type = BookingType()
+                },
+                navArgument("status") {
+                    type = StringType
                 }
             )
         ) { entry ->
             val room = entry.arguments?.getParcelable<Room>("room")
             val hotel = entry.arguments?.getParcelable<Hotel>("hotel")
             val booking = entry.arguments?.getParcelable<Booking>("booking")
-            EditBookingScreen( navController = navController, room = room!!, hotel = hotel!!, booking = booking!!)
+            val status = entry.arguments?.getString("status")
+            EditBookingScreen( navController = navController, room = room!!, hotel = hotel!!, booking = booking!!, status = status!!)
         }
 
     }

@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import by.yaugesha.hotelbooking.DataClasses.Booking
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.User
@@ -179,6 +180,10 @@ class AdminViewModel: ViewModel() {
         return listHotelNames.distinct()
     }
 
+    suspend fun getBookings(): List<Booking> {
+        val listOfBookings = model.loadListOfBookings().values ?: return listOf<Booking>()
+        return listOfBookings.toList()
+    }
 }
 
 class AdminVMFactory(context: Context) : ViewModelProvider.Factory {
