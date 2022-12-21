@@ -242,8 +242,9 @@ class MainViewModel: ViewModel() {
     }
 
     suspend fun getUserBookings(login: String): List<Booking> {
+        val formatter = SimpleDateFormat("dd.MM.yyyy")
         val listOfBookings = model.findUserBookings(login)?.values ?: return listOf<Booking>()
-        return listOfBookings.toList()
+        return listOfBookings.toList().sortedByDescending { formatter.parse(it.date)?.time }
     }
 
     fun setBooking(booking: Booking) {

@@ -130,6 +130,7 @@ fun AdminSearchHotelScreen(navController: NavController) {
                             Log.i("config", "Got:  ${searchConf.value}")
                             navController.navigate(Screen.HotelSearchResultScreen.route + "/" + parameter.value + "/" + searchConf.value)
                         },
+                        enabled = hotelName.value.isNotEmpty() || location.value.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
                         shape = (RoundedCornerShape(24.dp)),
                         modifier = Modifier

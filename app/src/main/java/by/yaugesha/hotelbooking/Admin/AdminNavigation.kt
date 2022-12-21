@@ -6,6 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import by.yaugesha.hotelbooking.Admin.Bookings.BookingDescriptionScreen
+import by.yaugesha.hotelbooking.Admin.Bookings.UserBookingsScreen
 import by.yaugesha.hotelbooking.Admin.Hotel.Add.AddHotelScreen
 import by.yaugesha.hotelbooking.Admin.Hotel.Add.AddRoom
 import by.yaugesha.hotelbooking.Admin.Hotel.AdminSearchHotelScreen
@@ -15,6 +17,8 @@ import by.yaugesha.hotelbooking.Admin.Hotel.Edit.HotelScreen
 import by.yaugesha.hotelbooking.Admin.Hotel.HotelSearchResultScreen
 import by.yaugesha.hotelbooking.Admin.User.SearchUserScreen
 import by.yaugesha.hotelbooking.DataClasses.*
+import by.yaugesha.hotelbooking.Main.Screens.BookingsScreen
+import by.yaugesha.hotelbooking.Main.Screens.OrderScreen
 
 @Composable
 fun AdminNavigation(login: String) {
@@ -48,16 +52,19 @@ fun AdminNavigation(login: String) {
                 }
             }
         }
+
         composable(
             route = Screen.AddHotelScreen.route
         ) {
             AddHotelScreen(navController = navController)
         }
+
         composable(
             route = Screen.AllBookingsScreen.route
         ) {
             AllBookingsScreen(navController = navController)
         }
+
         composable(
             route = Screen.AddRoomScreen.route + "/{hotelId}",
             arguments = listOf(
@@ -69,6 +76,7 @@ fun AdminNavigation(login: String) {
             entry.arguments?.getString("hotelId")
                 ?.let { AddRoom(navController = navController, hotelId = it) }
         }
+
         composable(
             route = Screen.HotelScreen.route + "/{hotelId}",
             arguments = listOf(
@@ -82,6 +90,7 @@ fun AdminNavigation(login: String) {
                 hotelId = entry.arguments?.getString("hotelId")!!
             )
         }
+
         composable(
             route = Screen.EditRoomScreen.route + "/{room}",
             arguments = listOf(
@@ -95,6 +104,7 @@ fun AdminNavigation(login: String) {
                 navController = navController, room = room!!
             )
         }
+
         composable(
             route = Screen.EditHotelScreen.route + "/{hotel}",
             arguments = listOf(
@@ -108,10 +118,34 @@ fun AdminNavigation(login: String) {
                 navController = navController, hotel = hotel!!
             )
         }
+
         composable(
             route = Screen.SearchUserScreen.route
         ) {
             SearchUserScreen(navController = navController)
+        }
+
+        composable(route = Screen.UserBookingsScreen.route) {
+            UserBookingsScreen(navController = navController)
+        }
+
+        composable(route = Screen.BookingDescriptionScreen.route + "/{room}/{hotel}/{booking}",
+            arguments = listOf(
+                navArgument("room") {
+                    type = RoomType()
+                },
+                navArgument("hotel") {
+                    type = HotelType()
+                },
+                navArgument("booking") {
+                    type = BookingType()
+                }
+            )
+        ) { entry ->
+            val room = entry.arguments?.getParcelable<Room>("room")
+            val hotel = entry.arguments?.getParcelable<Hotel>("hotel")
+            val booking = entry.arguments?.getParcelable<Booking>("booking")
+            BookingDescriptionScreen( navController = navController, room = room!!, hotel = hotel!!, booking = booking!!)
         }
     }
 }

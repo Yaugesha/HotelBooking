@@ -59,13 +59,14 @@ fun HotelCardDescriptionForAdmin(navController: NavController, hotel: Hotel) {
             color = Color.White
         )
 
+        Spacer(modifier = Modifier.padding(8.dp))
+
         Button(
             onClick = { navController.navigate(Screen.HotelScreen.route + "/" + hotel.hotelId) },
             colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
             shape = (RoundedCornerShape(16.dp)),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp)
         ) {
             Text(text  = "View",
                 fontSize = 16.sp,
@@ -87,73 +88,88 @@ fun HotelSearchResultScreen(navController: NavController, searchParameter: Strin
         3 -> vm.viewModelScope.launch { hotelList = searchHotelByLocationAndName(vm, searchParameter).toMutableList() }
         4 -> vm.viewModelScope.launch { hotelList = setHotelList(vm).toMutableList() }
     }
-    val context = LocalContext.current
-    Column( modifier = Modifier
-        .background(BackgroundColor)
-        .fillMaxHeight()) {
-        SearchHotelParametersBar(navController, Search())
-        Button(
-            onClick = {
-                navController.navigate(Screen.AddHotelScreen.route)
-            },
-            colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
-            shape = (RoundedCornerShape(16.dp)),
-            modifier = Modifier
-                .fillMaxWidth()
-                //.padding(top = 111.dp)
-                .padding(top = 18.dp)
-                .wrapContentWidth(Alignment.CenterHorizontally)
-                .height(44.dp)
-                .width(358.dp)
-        )
-        {
+    if (hotelList.isEmpty()) {
+        Row(modifier = Modifier
+            .fillMaxSize()
+            .wrapContentHeight(Alignment.CenterVertically)) {
             Text(
-                text = "Add new hotel",
-                fontSize = 16.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
+                text = "No hotels found", fontSize = 40.sp,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentSize(Alignment.Center)
+                    /*.wrapContentWidth(Alignment.CenterHorizontally)*/
+                    .wrapContentHeight(Alignment.CenterVertically)
             )
         }
+    } else {
+        val context = LocalContext.current
+        Column( modifier = Modifier
+            .background(BackgroundColor)
+            .fillMaxHeight()) {
+           // SearchHotelParametersBar(navController, Search())
+            Button(
+                onClick = {
+                    navController.navigate(Screen.AddHotelScreen.route)
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+                shape = (RoundedCornerShape(16.dp)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    //.padding(top = 111.dp)
+                    .padding(top = 18.dp)
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                    .height(44.dp)
+                    .width(358.dp)
+            )
+            {
+                Text(
+                    text = "Add new hotel",
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                )
+            }
 
-        Column(modifier = Modifier
-            //.padding(top = 164.dp)
-            .verticalScroll(rememberScrollState())
-        ) {
+            Spacer(modifier = Modifier.padding(top = 2.dp))
+            Column(modifier = Modifier
+                //.padding(top = 164.dp)
+                .verticalScroll(rememberScrollState())
+            ) {
 
-            Spacer(modifier = Modifier.padding(top = 18.dp))
-            for (i in hotelList.indices) {
-                Card(
-                    shape = (RoundedCornerShape(32.dp)),
-                    backgroundColor = AdminCardColor,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally)
-                        .height(182.dp)
-                        .width(358.dp)
-                ) {
-                    Row{
-                        Card(backgroundColor = AdminCardColor,
-                            modifier = Modifier
-                                .wrapContentWidth(Alignment.Start)
-                                .width(158.dp)
-                                .fillMaxHeight()){
-                            AsyncImage( //height(513.dp).width(396.dp)
-                                model = hotelList[i].photoURI, contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.clip(RoundedCornerShape(32.dp))
-                            )
+                Spacer(modifier = Modifier.padding(top = 18.dp))
+                for (i in hotelList.indices) {
+                    Card(
+                        shape = (RoundedCornerShape(32.dp)),
+                        backgroundColor = AdminCardColor,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                            .height(182.dp)
+                            .width(358.dp)
+                    ) {
+                        Row{
+                            Card(backgroundColor = AdminCardColor,
+                                modifier = Modifier
+                                    .wrapContentWidth(Alignment.Start)
+                                    .width(158.dp)
+                                    .fillMaxHeight()){
+                                AsyncImage( //height(513.dp).width(396.dp)
+                                    model = hotelList[i].photoURI, contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.clip(RoundedCornerShape(32.dp))
+                                )
+                            }
+                            Spacer(modifier = Modifier.padding(start = 4.dp))
+                            HotelCardDescriptionForAdmin(navController, hotelList[i])
                         }
-                        Spacer(modifier = Modifier.padding(start = 4.dp))
-                        HotelCardDescriptionForAdmin(navController, hotelList[i])
-                    }
 
+                    }
+                    Spacer(modifier = Modifier.padding(top = 20.dp))
                 }
-                Spacer(modifier = Modifier.padding(top = 20.dp))
             }
         }
     }
-
 }
 
 suspend fun setHotelList(vm: AdminViewModel): List<Hotel> {

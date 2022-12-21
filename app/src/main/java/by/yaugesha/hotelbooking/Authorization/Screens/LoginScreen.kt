@@ -47,8 +47,8 @@ fun LoginScreen(navController: NavController) {
 
     BackPressHandler(onBackPressed = {})
 
-    val login = remember { mutableStateOf("user") }//"admin"user
-    val password = remember { mutableStateOf("Useruser01") }//"admin01"Useruser01
+    val login = remember { mutableStateOf("admin") }//"admin"user
+    val password = remember { mutableStateOf("admin01") }//"admin01"Useruser01
     val context = LocalContext.current
     val vm = AuthViewModel()
 

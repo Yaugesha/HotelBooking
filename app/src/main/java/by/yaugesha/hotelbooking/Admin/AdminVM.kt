@@ -3,6 +3,7 @@ package by.yaugesha.hotelbooking.Admin
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.ui.text.toLowerCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import by.yaugesha.hotelbooking.DataClasses.Booking
@@ -11,20 +12,20 @@ import by.yaugesha.hotelbooking.DataClasses.Room
 import by.yaugesha.hotelbooking.DataClasses.User
 import by.yaugesha.hotelbooking.Model
 import java.io.ByteArrayOutputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
 class AdminViewModel: ViewModel() {
 
     val model = Model()
-    var userList: List<User> = mutableListOf()
     var hotelList: List<Hotel> = mutableListOf()
     var roomList: List<Room> = mutableListOf()
+    val formatter = SimpleDateFormat("dd.MM.yyyy")
 
     suspend fun getUsers(): List<User> {
-        val userMap: HashMap<String, User> = model.loadListOfUsers()
-        userList = userMap.values.toList()
+        val userList = model.loadListOfUsers().values
         Log.i("user list", "Got size ${userList}")
-        return userList
+        return userList.toList()
     }
 
 
@@ -117,7 +118,9 @@ class AdminViewModel: ViewModel() {
                 country = location.removeRange(0..i+1)
             }
         }
-        model.searchHotelByLocation(city)?.values!!.forEach {
+        val listOfHotels = model.searchHotelByLocation(city)?.values
+        if(! listOfHotels.isNullOrEmpty())
+            listOfHotels.forEach {
             if(it.country == country && it.name == hotelName) {
                 hotelList.add(it)
             }
@@ -181,8 +184,23 @@ class AdminViewModel: ViewModel() {
     }
 
     suspend fun getBookings(): List<Booking> {
-        val listOfBookings = model.loadListOfBookings().values ?: return listOf<Booking>()
-        return listOfBookings.toList()
+        val listOfBookings = model.loadListOfBookings().values
+        return listOfBookings.toList().sortedByDescending { formatter.parse(it.date)?.time }
+    }
+
+    fun sortUsers(users: MutableList<User>, role: String): List<User> {
+        when(role) {
+            "Admin" -> {
+                users.removeIf { it.role != "admin" }
+                return users
+            }
+            "User" -> {
+                users.removeIf { it.role != "user" }
+                return users
+            }
+        }
+        users.removeIf { it.role != role }
+        return users
     }
 }
 

@@ -30,6 +30,8 @@ sealed class Screen(val route: String) {
     object HotelSearchResultScreen : Screen("hotel_search_result_screen")
     object SearchUserScreen : Screen("search_hotel_result_screen")
     object AllBookingsScreen : Screen("all_bookings_screen")
+    object UserBookingsScreen : Screen("user_bookings_screen")
+    object BookingDescriptionScreen : Screen("booking_description_screen")
 
     //User
     object UserSearchScreen : Screen("user_search_screen")
