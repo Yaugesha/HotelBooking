@@ -25,17 +25,19 @@ class Model {
 
 
     fun writeNewUser() {
-        dataBase.child("Users").child(user.login).child("email").setValue(user.email)
+        dataBase.child("Users").child(user.login).setValue(user)
+/*        dataBase.child("Users").child(user.login).child("email").setValue(user.email)
         dataBase.child("Users").child(user.login).child("login").setValue(user.login)
         dataBase.child("Users").child(user.login).child("name").setValue(user.name)
         dataBase.child("Users").child(user.login).child("password").setValue(user.password)
         dataBase.child("Users").child(user.login).child("status").setValue(user.status)
         dataBase.child("Users").child(user.login).child("role").setValue(user.role)
-        dataBase.child("Users").child(user.login).child("surname").setValue(user.surname)
+        dataBase.child("Users").child(user.login).child("surname").setValue(user.surname)*/
     }
 
     fun writeNewHotel(byteArray: ByteArray) {
-        dataBase.child("Hotels").child(hotel.hotelId).child("hotelId").setValue(hotel.hotelId)
+        dataBase.child("Hotels").child(hotel.hotelId).setValue(hotel)
+        /*dataBase.child("Hotels").child(hotel.hotelId).child("hotelId").setValue(hotel.hotelId)
         dataBase.child("Hotels").child(hotel.hotelId).child("name").setValue(hotel.name)
         dataBase.child("Hotels").child(hotel.hotelId).child("country").setValue(hotel.country)
         dataBase.child("Hotels").child(hotel.hotelId).child("city").setValue(hotel.city)
@@ -46,7 +48,7 @@ class Model {
         dataBase.child("Hotels").child(hotel.hotelId).child("checkIn").setValue(hotel.checkIn)
         dataBase.child("Hotels").child(hotel.hotelId).child("checkOut").setValue(hotel.checkOut)
         dataBase.child("Hotels").child(hotel.hotelId).child("status").setValue(hotel.status)
-        dataBase.child("Hotels").child(hotel.hotelId).child("amenities").setValue(hotel.amenities)
+        dataBase.child("Hotels").child(hotel.hotelId).child("amenities").setValue(hotel.amenities)*/
         var url: String
         val hotelImagesReference = storageRef.child("Images").child("Hotels").child(hotel.hotelId)
             .child("hotel_" + hotel.hotelId)
@@ -66,7 +68,8 @@ class Model {
     }
 
     fun writeNewRoom(byteArray: ByteArray) {
-        dataBase.child("Rooms").child(room.roomId).child("roomId").setValue(room.roomId)
+        dataBase.child("Rooms").child(room.roomId).setValue(room)
+        /*dataBase.child("Rooms").child(room.roomId).child("roomId").setValue(room.roomId)
         dataBase.child("Rooms").child(room.roomId).child("hotelID").setValue(room.hotelID)
         dataBase.child("Rooms").child(room.roomId).child("peopleCapacity").setValue(room.peopleCapacity)
         dataBase.child("Rooms").child(room.roomId).child("price").setValue(room.price)
@@ -76,7 +79,7 @@ class Model {
         dataBase.child("Rooms").child(room.roomId).child("numberOfDoubleBeds").setValue(room.numberOfDoubleBeds)
         dataBase.child("Rooms").child(room.roomId).child("numberOfSingleBeds").setValue(room.numberOfSingleBeds)
         dataBase.child("Rooms").child(room.roomId).child("status").setValue(room.status)
-        dataBase.child("Rooms").child(room.roomId).child("amenities").setValue(room.amenities)
+        dataBase.child("Rooms").child(room.roomId).child("amenities").setValue(room.amenities)*/
         var url: String
         val hotelImagesReference = storageRef.child("Images").child("Hotels").child(room.hotelID)
             .child("room_" + room.roomId)
@@ -274,8 +277,8 @@ class Model {
         dataBase.child("Rooms").child(roomId).removeValue()
     }
 
-    suspend fun loadListOfRooms(): HashMap<String, Room> {
-        return dataBase.child("Rooms").get().await().getValue<HashMap<String, Room>>()!!
+    suspend fun loadListOfRooms(): List<Room> {
+        return dataBase.child("Rooms").get().await().getValue<List<Room>>()!!
     }
 
     suspend fun getHotelDataForUserSearch(hotelId: String): HashMap<String, Any> {

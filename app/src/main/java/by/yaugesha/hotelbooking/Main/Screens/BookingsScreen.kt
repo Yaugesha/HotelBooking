@@ -16,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import by.yaugesha.hotelbooking.Admin.LoadingAnimation
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.Main.FavoriteButton
@@ -27,10 +29,7 @@ import by.yaugesha.hotelbooking.Main.MainViewModel
 import by.yaugesha.hotelbooking.Main.setHotelForRoom
 import coil.compose.AsyncImage
 import com.google.gson.Gson
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 
 fun <T> SnapshotStateList<T>.swapList(newList: List<T>){
     clear()
@@ -43,11 +42,16 @@ fun <T> SnapshotStateList<T>.swapList(newList: List<T>){
 @Composable
 fun BookingsScreen(navController: NavController) {
     val vm = MainViewModel()
+    val context = LocalContext.current
+    val login = remember {vm.getLogin(context)!!}
     val bookingsList = remember { mutableStateListOf<Booking>()}
     var allBookings = listOf<Booking>()
     val sort = remember { mutableStateOf("")}
-    vm.viewModelScope.launch {allBookings = setListOfUserBookings(vm, "user")}
-    bookingsList.swapList(allBookings)
+    vm.viewModelScope.launch {
+        allBookings = setListOfUserBookings(vm, login)
+        delay(1000)
+        bookingsList.swapList(allBookings)
+    }
     Log.i("allBookings:",  "$allBookings")
 
     val bottomItems = listOf(BarItem.Search, BarItem.Favorites, BarItem.Bookings, BarItem.Profile)
@@ -55,18 +59,25 @@ fun BookingsScreen(navController: NavController) {
             bottomBar = { BottomBar(navController, bottomItems) }
         ) {
             if (bookingsList.isEmpty()) {
-                Row(
+                /*Row(
                     modifier = Modifier
                         .fillMaxSize()
                         .wrapContentHeight(Alignment.CenterVertically)
                 ) {
                     Text(
-                        text = "No rooms found", fontSize = 40.sp,
+                        text = "No bookings found", fontSize = 40.sp,
                         modifier = Modifier
                             .fillMaxSize()
                             .wrapContentSize(Alignment.Center)
                             .wrapContentHeight(Alignment.CenterVertically)
                     )
+                }*/
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LoadingAnimation()
                 }
             } else {
                 BookingsParametersBar(bookingsList, allBookings)
@@ -105,7 +116,7 @@ fun BookingsScreen(navController: NavController) {
                                         modifier = Modifier.clip(RoundedCornerShape(24.dp))
                                     )
                                 }
-                                FavoriteButton(vm, "user", room.roomId)
+                                FavoriteButton(vm, login, room.roomId)
                             }
                             BookingDescriptionCard(navController, bookingsList[i], room, hotel.value,
                                 vm.defineStatusOfBooking(bookingsList[i]))
@@ -233,10 +244,7 @@ fun BookingsParametersBar(bookingsList: SnapshotStateList<Booking>, allBooking: 
 
 
 suspend fun setListOfUserBookings(vm: MainViewModel, login: String): List<Booking> {
-    val result: Deferred<List<Booking>>
-    runBlocking {
-        result = async { vm.getUserBookings(login)}
-    }
+    val result: Deferred<List<Booking>> = vm.viewModelScope.async { vm.getUserBookings(login)}
     return result.await()
 }
 

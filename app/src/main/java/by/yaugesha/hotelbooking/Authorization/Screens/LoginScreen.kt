@@ -47,8 +47,8 @@ fun LoginScreen(navController: NavController) {
 
     BackPressHandler(onBackPressed = {})
 
-    val login = remember { mutableStateOf("admin") }//"admin"user
-    val password = remember { mutableStateOf("admin01") }//"admin01"Useruser01
+    val login = remember { mutableStateOf("user") }//"admin"user
+    val password = remember { mutableStateOf("Useruser01") }//"admin01"Useruser01
     val context = LocalContext.current
     val vm = AuthViewModel()
 
@@ -204,11 +204,14 @@ suspend fun login(context: Context, vm: AuthViewModel, login: String, password: 
             "user" -> {
                 val intent = Intent(context,MainActivity::class.java )
                 intent.putExtra("login", user.login)
+                vm.writeLogin(user.login, context)
+                vm.getLogin(context)
                 context.startActivity(intent)
             }
             "admin" -> {
                 val intent = Intent(context,AdminActivity::class.java )
                 intent.putExtra("login", user.login)
+                vm.writeLogin(user.login, context)
                 context.startActivity(intent)
             }
             "error" -> string = "Incorrect input"

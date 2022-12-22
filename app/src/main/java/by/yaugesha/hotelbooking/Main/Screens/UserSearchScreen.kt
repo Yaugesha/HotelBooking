@@ -36,7 +36,6 @@ import by.yaugesha.hotelbooking.Admin.Hotel.HotelSearchField
 import by.yaugesha.hotelbooking.Authorization.ui.theme.BackgroundColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.*
-import by.yaugesha.hotelbooking.Main.Screens.LoadingAnimation
 import by.yaugesha.hotelbooking.R
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
@@ -79,41 +78,9 @@ fun UserSearchScreen(navController: NavController) {
                     .wrapContentHeight(Alignment.Top)
                     .fillMaxWidth()
                     .fillMaxHeight()
-                    .height(528.dp)
+                    //.height(598.dp)
+                    //.verticalScroll(rememberScrollState())
             ) {
-
-                Button(
-                    onClick = {
-                        val searchData = Search(location = location.value, checkInDate = formatter.parse(arrivalDate.value)!!,
-                            checkOutDate = formatter.parse(departureDate.value)!!, guests = guests.value.toInt(), rooms = rooms.value.toInt(),
-                            sorts = Sort()
-                            )
-                        val searchJson = Uri.encode(Gson().toJson(searchData))
-                        navController.navigate(Screen.UserSearchResultScreen.route + "/" + searchJson.toString())
-
-                    },
-                    enabled = arrivalDate.value != "Date" && departureDate.value != "Date" &&
-                        (location.value.isNotEmpty() &&  guests.value.isNotEmpty() && rooms.value.isNotEmpty() &&
-                        (formatter.parse(departureDate.value)!! >= formatter.parse(arrivalDate.value)!! ||
-                        Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()) <= formatter.parse(arrivalDate.value)!!)),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
-                    shape = (RoundedCornerShape(24.dp)),
-                    modifier = Modifier
-                        .padding(top = 416.dp, bottom = 68.dp)
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally)
-                        .height(44.dp)
-                        .width(182.dp)
-                )
-                {
-                    Text(
-                        text = "Search",
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                    )
-                }
                 Text(
                     text = "Search Hotel", fontSize = 24.sp,
                     modifier = Modifier.padding(start = 36.dp, top = 30.dp)
@@ -123,12 +90,11 @@ fun UserSearchScreen(navController: NavController) {
                     text = "Find hotel as you need with demand.", fontSize = 12.sp,
                     modifier = Modifier.padding(start = 36.dp, top = 64.dp)
                 )
-
+                Spacer(Modifier.padding(top = 32.dp))
+                UsersSearchHotelFields(navController, location, arrivalDate, departureDate, guests, rooms)
             }
-            UsersSearchHotelFields(location, arrivalDate, departureDate, guests, rooms)
         }
     }
-
 }
 
 
@@ -221,13 +187,14 @@ fun SearchField(text: MutableState<String>) {
 
 //Arrival + Departure search
 @Composable
-fun LittleNumberInputField(value: MutableState<String>) {
+fun LittleNumberInputField(value: MutableState<String>, enabled: Boolean = true) {
 
     OutlinedTextField(
         value.value, { value.value = it },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         shape = (RoundedCornerShape(24.dp)),
         singleLine = true,
+        enabled = enabled,
         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
         modifier = Modifier
             .height(52.dp)
@@ -237,13 +204,13 @@ fun LittleNumberInputField(value: MutableState<String>) {
 
 @Composable
 fun UsersSearchHotelFields(
-    location: MutableState<String>, arrivalDate: MutableState<String>,
+    navController: NavController,location: MutableState<String>, arrivalDate: MutableState<String>,
     departureDate: MutableState<String>, guests: MutableState<String>, rooms: MutableState<String>
 ) {
     val context = LocalContext.current
     val showSearchLocationHelp = rememberSaveable { mutableStateOf(false) }
 
-    Column(modifier = Modifier.padding(start = 36.dp, end = 36.dp, top = 350.dp)) {
+    Column(modifier = Modifier.padding(start = 36.dp, end = 36.dp, top = 102.dp)) {
         Text(text = "City", fontSize = 20.sp,)
 
         Spacer(modifier = Modifier.padding(top = 8.dp))
@@ -305,6 +272,42 @@ fun UsersSearchHotelFields(
                 LittleNumberInputField(rooms)
 
             }
+        }
+
+        Spacer(modifier = Modifier.padding(top = 22.dp))
+
+        Button(
+            onClick = {
+                val searchData = Search(location = location.value, checkInDate = formatter.parse(arrivalDate.value)!!,
+                    checkOutDate = formatter.parse(departureDate.value)!!, guests = guests.value.toInt(), rooms = rooms.value.toInt(),
+                    sorts = Sort()
+                )
+                val searchJson = Uri.encode(Gson().toJson(searchData))
+                navController.navigate(Screen.UserSearchResultScreen.route + "/" + searchJson.toString())
+
+            },
+            enabled = arrivalDate.value != "Date" && departureDate.value != "Date" &&
+                    (location.value.isNotEmpty() &&  guests.value.isNotEmpty() && rooms.value.isNotEmpty() &&
+                            (formatter.parse(departureDate.value)!! >= formatter.parse(arrivalDate.value)!! ||
+                                    Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()) <= formatter.parse(arrivalDate.value)!!)),
+            colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
+            shape = (RoundedCornerShape(24.dp)),
+            modifier = Modifier
+                .padding(/*top = 416.dp,*/ bottom = 68.dp)
+                .fillMaxSize()
+                .wrapContentHeight(Alignment.Bottom)
+                .wrapContentWidth(Alignment.CenterHorizontally)
+                .height(44.dp)
+                .width(182.dp)
+        )
+        {
+            Text(
+                text = "Search",
+                fontSize = 16.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

@@ -1,5 +1,6 @@
 package by.yaugesha.hotelbooking.Main
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
@@ -8,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.Model
 import kotlinx.coroutines.*
+import java.io.FileInputStream
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
@@ -284,7 +286,7 @@ class MainViewModel: ViewModel() {
     fun defineStatusOfBooking(booking: Booking): String {
         val formatter = SimpleDateFormat("dd.MM.yyyy")
        return if(booking.status == "active") {
-            if (formatter.parse(booking.checkInDate).time >= Date.from(
+            if (formatter.parse(booking.checkInDate).time > Date.from(
                     LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()
                 ).time
             )
@@ -333,5 +335,38 @@ class MainViewModel: ViewModel() {
             ).time || it.status == "canceled"
         }
         return bookings
+    }
+
+    fun sortRooms (roomList: MutableList<Room>, parameter: String): List<Room> {
+        when(parameter){
+            "Price min"-> {
+                roomList.sortBy { it.price }
+                Log.i("roomList", roomList.toString())
+                return roomList
+            }
+            "Price max" -> {
+                roomList.sortByDescending { it.price }
+                return roomList
+            }
+            "Square max" -> {
+                roomList.sortBy { it.square }
+                return roomList
+            }
+            "Square min" -> {
+                roomList.sortByDescending { it.square }
+                return roomList
+            }
+        }
+        return roomList
+    }
+
+    fun getLogin(context: Context): String? {
+        var fin: FileInputStream? = null
+        fin = context.openFileInput ("USER_LOGIN")
+        val bytes = fin?.let { ByteArray(it.available()) }
+        fin?.read(bytes)
+        val text = bytes?.let { String(it) }
+        fin?.close();
+        return text
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +43,8 @@ import java.text.SimpleDateFormat
 fun RoomScreen(navController: NavController, searchData: Search, room: Room, hotel: Hotel) {
     val amenities: Map<String, Boolean> = room.amenities + hotel.amenities
     val vm = MainViewModel()
+    val context = LocalContext.current
+    val login = remember {vm.getLogin(context)!!}
     val nights = Math.abs(searchData.checkOutDate.getTime() - searchData.checkInDate.getTime()) / (1000 * 60 * 60 * 24)
     val formatter = SimpleDateFormat("dd.MMM")
     Scaffold(
@@ -136,7 +139,7 @@ fun RoomScreen(navController: NavController, searchData: Search, room: Room, hot
 
                     val favouriteVisible = remember { mutableStateOf(false) }
                     vm.viewModelScope.launch {
-                        favouriteVisible.value = isRoomInFavorites(vm, room.roomId, "user")
+                        favouriteVisible.value = isRoomInFavorites(vm, room.roomId, login)
                     }
                     if (favouriteVisible.value)
                     {

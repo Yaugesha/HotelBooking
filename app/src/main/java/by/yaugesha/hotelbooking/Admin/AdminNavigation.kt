@@ -15,7 +15,10 @@ import by.yaugesha.hotelbooking.Admin.Hotel.Edit.EditHotelScreen
 import by.yaugesha.hotelbooking.Admin.Hotel.Edit.EditRoomScreen
 import by.yaugesha.hotelbooking.Admin.Hotel.Edit.HotelScreen
 import by.yaugesha.hotelbooking.Admin.Hotel.HotelSearchResultScreen
+import by.yaugesha.hotelbooking.Admin.User.AdminProfileScreen
+import by.yaugesha.hotelbooking.Admin.User.EditAdminProfileScreen
 import by.yaugesha.hotelbooking.Admin.User.SearchUserScreen
+import by.yaugesha.hotelbooking.Authorization.Screens.LoginScreen
 import by.yaugesha.hotelbooking.DataClasses.*
 import by.yaugesha.hotelbooking.Main.Screens.BookingsScreen
 import by.yaugesha.hotelbooking.Main.Screens.OrderScreen
@@ -146,6 +149,20 @@ fun AdminNavigation(login: String) {
             val hotel = entry.arguments?.getParcelable<Hotel>("hotel")
             val booking = entry.arguments?.getParcelable<Booking>("booking")
             BookingDescriptionScreen( navController = navController, room = room!!, hotel = hotel!!, booking = booking!!)
+        }
+
+        composable(
+            route = Screen.AdminProfileScreen.route
+        ) {
+            AdminProfileScreen(navController = navController)
+        }
+
+        composable(route = Screen.EditAdminProfileScreen.route) {
+            EditAdminProfileScreen(navController = navController)
+        }
+
+        composable(route = Screen.LoginScreen.route) {
+            LoginScreen(navController = navController)
         }
     }
 }

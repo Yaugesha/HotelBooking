@@ -41,8 +41,10 @@ fun UserBookingsScreen(navController: NavController) {
     val bookingsList = remember { mutableStateListOf<Booking>() }
     var allBookings = listOf<Booking>()
     val sort = remember { mutableStateOf("") }
-    vm.viewModelScope.launch { allBookings = setListOfUserBookings(vm, "user") }
-    bookingsList.swapList(allBookings)
+    vm.viewModelScope.launch {
+        allBookings = setListOfUserBookings(vm, "user")
+        bookingsList.swapList(allBookings)
+    }
 
     Scaffold {
         if (bookingsList.isEmpty()) {

@@ -3,7 +3,6 @@ package by.yaugesha.hotelbooking.Admin
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
-import androidx.compose.ui.text.toLowerCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import by.yaugesha.hotelbooking.DataClasses.Booking
@@ -15,6 +14,8 @@ import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
+
+
 class AdminViewModel: ViewModel() {
 
     val model = Model()
@@ -22,10 +23,11 @@ class AdminViewModel: ViewModel() {
     var roomList: List<Room> = mutableListOf()
     val formatter = SimpleDateFormat("dd.MM.yyyy")
 
-    suspend fun getUsers(): List<User> {
+    suspend fun getUsers(): List<User> {/*
         val userList = model.loadListOfUsers().values
-        Log.i("user list", "Got size ${userList}")
-        return userList.toList()
+        return userList.toList()*/
+        val userMap = model.loadListOfUsers()
+        return userMap.values.toList()
     }
 
 
@@ -189,16 +191,20 @@ class AdminViewModel: ViewModel() {
     }
 
     fun sortUsers(users: MutableList<User>, role: String): List<User> {
+        Log.i("got users", users.toString())
         when(role) {
             "Admin" -> {
                 users.removeIf { it.role != "admin" }
+                Log.i("admins", users.toString())
                 return users
             }
             "User" -> {
                 users.removeIf { it.role != "user" }
+                Log.i("users", users.toString())
                 return users
             }
         }
+        Log.i("all users", users.toString())
         users.removeIf { it.role != role }
         return users
     }

@@ -1,6 +1,7 @@
 package by.yaugesha.hotelbooking.Authorization
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -10,6 +11,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.math.BigInteger
 import java.security.MessageDigest
 
@@ -55,6 +58,12 @@ class AuthViewModel: ViewModel() {
     fun setUserLogin(login: String) { // check if it's unique
         model.user.login = login
     }
+    fun setUserName(name: String) { // check if it's unique
+        model.user.name = name
+    }
+    fun setUserSurname(surname: String) { // check if it's unique
+        model.user.surname = surname
+    }
 
     fun isPasswordSuitable(password: String): Boolean {
         return (password.any { it.isDigit() } && password.any { it.isLetter()} && password.length >= 8 )
@@ -63,6 +72,23 @@ class AuthViewModel: ViewModel() {
     fun registerUser(): Boolean {
         model.writeNewUser()
         return true
+    }
+
+    fun writeLogin(login: String, context: Context) {
+        var fos: FileOutputStream? = null
+        fos = context.openFileOutput("USER_LOGIN", MODE_PRIVATE);
+        fos?.write(login.toByteArray());
+        fos?.close();
+    }
+
+    fun getLogin(context: Context): String? {
+        var fin: FileInputStream? = null
+        fin = context.openFileInput ("USER_LOGIN")
+        val bytes = fin?.let { ByteArray(it.available()) }
+        fin?.read(bytes)
+        val text = bytes?.let { String(it) }
+        fin?.close();
+        return text
     }
 }
 

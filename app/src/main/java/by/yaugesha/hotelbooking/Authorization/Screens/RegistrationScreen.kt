@@ -3,7 +3,9 @@ package by.yaugesha.hotelbooking.Athorisation.Screens
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -37,16 +39,21 @@ fun RegistrationScreen(navController: NavController) {
     val pass2 = remember { mutableStateOf ("") }
     val email = remember { mutableStateOf("") }
     val login = remember { mutableStateOf("") }
+    val name = remember { mutableStateOf("") }
+    val surname = remember { mutableStateOf("") }
     val vm = AuthViewModel()
     val context = LocalContext.current
     vm.setUserEmail(email.value)
     vm.setUserLogin(login.value)
+    vm.setUserName(name.value)
+    vm.setUserSurname(surname.value)
 
     Column(
         modifier = Modifier
             .fillMaxHeight()
             .fillMaxWidth()
             .background(color = BackgroundColor)
+            .verticalScroll(rememberScrollState())
     ) {
         Text(
             text = "Get Started!", fontSize = 32.sp,
@@ -111,7 +118,7 @@ fun RegistrationScreen(navController: NavController) {
             Spacer(modifier = Modifier.padding(top = 20.dp))
 
             OutlinedTextField(
-                email.value, onValueChange = { newText -> email.value = newText },
+                name.value, onValueChange = { newText -> name.value = newText },
                 shape = (RoundedCornerShape(24.dp)),
                 singleLine = true,
                 //label = { Text("Name", color = Color.White) },
@@ -127,10 +134,10 @@ fun RegistrationScreen(navController: NavController) {
             Spacer(modifier = Modifier.padding(top = 20.dp))
 
             OutlinedTextField(
-                email.value, onValueChange = { newText -> email.value = newText },
+                surname.value, onValueChange = { newText -> surname.value = newText },
                 shape = (RoundedCornerShape(24.dp)),
                 singleLine = true,
-               // label = { Text("Surname", color = Color.White) },
+                //label = { Text("Surname", color = Color.White) },
                 placeholder = { Text(text = "Surname:", color = Color.White, fontSize = 14.sp) },
                 colors = TextFieldDefaults.textFieldColors(
                     textColor = Color.White,

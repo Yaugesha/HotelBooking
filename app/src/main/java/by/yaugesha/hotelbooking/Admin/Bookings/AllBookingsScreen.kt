@@ -30,38 +30,37 @@ import by.yaugesha.hotelbooking.Main.Screens.swapList
 import by.yaugesha.hotelbooking.Main.setHotelForRoom
 import coil.compose.AsyncImage
 import com.google.gson.Gson
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.*
+import androidx.compose.ui.unit.Dp
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
 @Composable
 fun AllBookingsScreen(navController: NavController) {
-    val bottomItems = listOf(BarItem.Users, BarItem.Hotels, BarItem.UsersBookings, BarItem.AdminProfile)
+    val bottomItems =
+        listOf(BarItem.Users, BarItem.Hotels, BarItem.UsersBookings, BarItem.AdminProfile)
     val vm = AdminViewModel()
     val sort = remember { mutableStateOf("") }
     val bookingsList = remember { mutableStateListOf<Booking>() }
     var allBookings = listOf<Booking>()
-    vm.viewModelScope.launch {allBookings = setListOfBookings(vm) }
-    bookingsList.swapList(allBookings)
+    vm.viewModelScope.launch(Dispatchers.Main) {
+        allBookings = setListOfBookings(vm)
+        delay(1000)
+        bookingsList.swapList(allBookings)
+    }
 
     Scaffold(
         bottomBar = { BottomBar(navController, bottomItems) }
     ) {
         if (bookingsList.isEmpty()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentHeight(Alignment.CenterVertically)
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "No bookings found", fontSize = 40.sp,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .wrapContentSize(Alignment.Center)
-                        .wrapContentHeight(Alignment.CenterVertically)
-                )
+                LoadingAnimation()
             }
         } else {
             BookingsParametersBar(bookingsList, allBookings)
@@ -72,11 +71,18 @@ fun AllBookingsScreen(navController: NavController) {
             ) {
                 for (i in bookingsList.indices) {
                     var room = Room()
-                    vm.viewModelScope.launch { room = getBookingRoom(MainViewModel(), bookingsList[i].room) }
+                    vm.viewModelScope.launch {
+                        room = getBookingRoom(MainViewModel(), bookingsList[i].room)
+                    }
                     Log.i("got room:", room.toString())
                     val hotel = rememberSaveable { mutableStateOf(Hotel()) }
-                    vm.viewModelScope.launch { hotel.value = setHotelForRoom(MainViewModel(), room.hotelID) }
-                    if (sort.value  == "" || sort.value == MainViewModel().defineStatusOfBooking(bookingsList[i]))
+                    vm.viewModelScope.launch {
+                        hotel.value = setHotelForRoom(MainViewModel(), room.hotelID)
+                    }
+                    if (sort.value == "" || sort.value == MainViewModel().defineStatusOfBooking(
+                            bookingsList[i]
+                        )
+                    )
                         Card(
                             shape = (RoundedCornerShape(24.dp)),
                             backgroundColor = Color.White,
@@ -101,9 +107,11 @@ fun AllBookingsScreen(navController: NavController) {
                                     )
                                 }
                             }
-                        BookingDescriptionCard(navController, bookingsList[i], room, hotel.value,
-                            MainViewModel().defineStatusOfBooking(bookingsList[i]))
-                    }
+                            BookingDescriptionCard(
+                                navController, bookingsList[i], room, hotel.value,
+                                MainViewModel().defineStatusOfBooking(bookingsList[i])
+                            )
+                        }
                     Spacer(modifier = Modifier.padding(top = 20.dp))
                 }
             }
@@ -181,10 +189,75 @@ fun BookingDescriptionCard(navController: NavController, booking: Booking, room:
     }
 }
 
-suspend fun setListOfBookings(vm: AdminViewModel): List<Booking> {
-    val result: Deferred<List<Booking>>
-    runBlocking {
-        result = async { vm.getBookings()}
+@Composable
+fun LoadingAnimation(
+    circleColor: Color = ButtonColor,
+    circleSize: Dp = 36.dp,
+    animationDelay: Int = 300,
+    initialAlpha: Float = 0.3f
+) {
+
+    // 3 circles
+    val circles = listOf(
+        remember {
+            Animatable(initialValue = initialAlpha)
+        },
+        remember {
+            Animatable(initialValue = initialAlpha)
+        },
+        remember {
+            Animatable(initialValue = initialAlpha)
+        }
+    )
+
+    circles.forEachIndexed { index, animatable ->
+
+        LaunchedEffect(Unit) {
+
+            // Use coroutine delay to sync animations
+            delay(timeMillis = (animationDelay / circles.size).toLong() * index)
+
+            animatable.animateTo(
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = animationDelay
+                    ),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+        }
     }
+
+    // container for circles
+    Row(
+        modifier = Modifier
+        //.border(width = 2.dp, color = Color.Magenta)
+    ) {
+
+        // adding each circle
+        circles.forEachIndexed { index, animatable ->
+
+            // gap between the circles
+            if (index != 0) {
+                Spacer(modifier = Modifier.width(width = 6.dp))
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(size = circleSize)
+                    .clip(shape = CircleShape)
+                    .background(
+                        color = circleColor
+                            .copy(alpha = animatable.value)
+                    )
+            ) {
+            }
+        }
+    }
+}
+
+suspend fun setListOfBookings(vm: AdminViewModel): List<Booking> {
+    val result: Deferred<List<Booking>> = vm.viewModelScope.async { vm.getBookings()}
     return result.await()
 }

@@ -32,6 +32,8 @@ sealed class Screen(val route: String) {
     object AllBookingsScreen : Screen("all_bookings_screen")
     object UserBookingsScreen : Screen("user_bookings_screen")
     object BookingDescriptionScreen : Screen("booking_description_screen")
+    object AdminProfileScreen : Screen("admin_profile_screen")
+    object EditAdminProfileScreen : Screen("edit_admin_profile_screen")
 
     //User
     object UserSearchScreen : Screen("user_search_screen")
@@ -92,7 +94,7 @@ sealed class Screen(val route: String) {
         object Users: BarItem(Screen.SearchUserScreen.route, R.drawable.ic_users,"Users" )
         object Hotels: BarItem(Screen.AdminSearchHotelScreen.route, R.drawable.ic_hotel,"Hotels" )
         object UsersBookings: BarItem(Screen.AllBookingsScreen.route, R.drawable.ic_bookings,"Bookings" )
-        object AdminProfile: BarItem(Screen.ProfileScreen.route, R.drawable.ic_account,"Profile" )
+        object AdminProfile: BarItem(Screen.AdminProfileScreen.route, R.drawable.ic_account,"Profile" )
     }
 
     /*fun withArgs(args: String): String {

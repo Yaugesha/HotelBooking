@@ -59,6 +59,7 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
     val amenities: Map<String, Boolean> = room.amenities + hotel.amenities
     val context = LocalContext.current
     val vm = MainViewModel()
+    val login = remember {vm.getLogin(context)!!}
     val formatter = SimpleDateFormat("dd.MM.yyyy")
     val rooms = rememberSaveable { mutableStateOf(searchData.rooms.toString()) }
     val arrivalDate = rememberSaveable { mutableStateOf(formatter.format(searchData.checkInDate)) }
@@ -95,7 +96,9 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
                     buttons = {
                         Row(
                             horizontalArrangement = Arrangement.SpaceAround,
-                            modifier = Modifier.padding(start = 8.dp, end = 8.dp).fillMaxWidth()
+                            modifier = Modifier
+                                .padding(start = 8.dp, end = 8.dp)
+                                .fillMaxWidth()
                         ) {
                             Button(
                                 onClick = {
@@ -106,18 +109,19 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
                                     Log.i("got value:",  "${checkBookingData.value}")
                                     if(checkBookingData.value == true &&
-                                        guests.value.toInt() > room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds) {
+                                        guests.value.toInt() < room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds) {
                                         val booking = Booking(
                                             bookingId = UUID.randomUUID().toString(),
-                                            user = "user",
+                                            user = login,
                                             room = room.roomId,
                                             guests = guests.value.toInt(),
                                             checkInDate = arrivalDate.value,
                                             checkOutDate = departureDate.value,
                                             amountOfRooms = rooms.value.toInt(),
                                             cost = (cost.value),
-                                            date = LocalDate.now()
-                                                .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+                                            date = LocalDate.now().format(
+                                                DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                                            )
                                         )
                                         vm.setBooking(booking)
                                     }
@@ -237,11 +241,13 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 
                         LittleNumberInputField(guests)
 
-                        if(guests.value.toInt() > room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds)
-                            Text(
-                                text = "Number of guests can't be more then ${room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds}",
-                                color = Color.Red, fontSize = 10.sp
-                        )
+                        if(guests.value != "0" && guests.value != "" && guests.value.isNotEmpty()) {
+                            if (guests.value.toInt() > room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds)
+                                Text(
+                                    text = "Number of guests can't be more then ${room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds}",
+                                    color = Color.Red, fontSize = 10.sp
+                                )
+                        }
                     }
 
                     Spacer(modifier = Modifier.padding(start = 68.dp))
@@ -312,15 +318,21 @@ fun OrderScreen(navController: NavController, searchData: Search, room: Room, ho
 }
 
 @Composable
-fun RoomsNumberInputField(value: MutableState<String>, cost: MutableState<Int>, nights: MutableState<Int>, price: Int) {
+fun RoomsNumberInputField(
+    value: MutableState<String>, cost: MutableState<Int>,nights: MutableState<Int>,
+    price: Int, enabled: Boolean = true
+) {
     OutlinedTextField(
         value.value, {
             value.value = it
-            if(it != null && it != "")
-                cost.value = it.toInt() * price * nights.value},
+            if(it != "0" && it != "" && it.isNotEmpty()) {
+                cost.value = it.toInt() * price * nights.value
+            }
+        },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         shape = (RoundedCornerShape(24.dp)),
         singleLine = true,
+        enabled = enabled,
         colors = TextFieldDefaults.textFieldColors(backgroundColor = Color.White),
         modifier = Modifier
             .height(52.dp)
@@ -331,7 +343,7 @@ fun RoomsNumberInputField(value: MutableState<String>, cost: MutableState<Int>, 
 @Composable
 fun ShowDateChangePicker1(context: Context, arrivalDate: MutableState<String>, cost: MutableState<Int>,
                           price: Int, departureDate: MutableState<String>, rooms: MutableState<String>,
-                          nights: MutableState<Int>,){
+                          nights: MutableState<Int>, enabled: Boolean = true){
     val formatter = SimpleDateFormat("dd.MM.yyyy")
     val year: Int
     val month: Int
@@ -355,6 +367,7 @@ fun ShowDateChangePicker1(context: Context, arrivalDate: MutableState<String>, c
         Button(
             onClick = { datePickerDialog.show() },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+            enabled = enabled,
             shape = (RoundedCornerShape(24.dp)),
             modifier = Modifier
                 .height(52.dp)
@@ -368,7 +381,7 @@ fun ShowDateChangePicker1(context: Context, arrivalDate: MutableState<String>, c
 @Composable
 fun ShowDateChangePicker2(context: Context, arrivalDate: MutableState<String>, cost: MutableState<Int>,
                           price: Int, departureDate: MutableState<String>, rooms: MutableState<String>,
-                          nights: MutableState<Int>,){
+                          nights: MutableState<Int>, enabled: Boolean = true){
     val formatter = SimpleDateFormat("dd.MM.yyyy")
     val year: Int
     val month: Int
@@ -392,6 +405,7 @@ fun ShowDateChangePicker2(context: Context, arrivalDate: MutableState<String>, c
         Button(
             onClick = { datePickerDialog.show() },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+            enabled = enabled,
             shape = (RoundedCornerShape(24.dp)),
             modifier = Modifier
                 .height(52.dp)

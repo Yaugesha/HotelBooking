@@ -5,62 +5,184 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import by.yaugesha.hotelbooking.Admin.AdminViewModel
+import by.yaugesha.hotelbooking.Admin.Hotel.HelpList
+import by.yaugesha.hotelbooking.Admin.Hotel.HelpListItem
+import by.yaugesha.hotelbooking.Admin.Hotel.setListOfLocations
+import by.yaugesha.hotelbooking.Admin.Hotel.setListOfNames
+import by.yaugesha.hotelbooking.Admin.LoadingAnimation
+import by.yaugesha.hotelbooking.Authorization.ui.theme.AdminCardColor
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.*
+import by.yaugesha.hotelbooking.Main.Screens.swapList
 import by.yaugesha.hotelbooking.R
 import coil.compose.AsyncImage
 import com.google.gson.Gson
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import java.lang.Math.random
 import java.text.SimpleDateFormat
 import java.util.*
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "CoroutineCreationDuringComposition",
+    "SuspiciousIndentation"
+)
 @Composable
 fun FavoritesScreen(navController: NavController) {
-    val user = User(login = "user")
     val vm = MainViewModel()
-    var favoritesList = listOf<Room>()
-    vm.viewModelScope.launch { favoritesList = getListOfFavorites(vm, user.login) }
+    val context = LocalContext.current
+    val login = remember {vm.getLogin(context)!!}
+    val favoritesList = remember { mutableStateListOf<Favorites>() }
+    val allFavorites = mutableListOf<Favorites>()
+    var allFavoritesRoom = listOf<Room>()
+    val allFavoritesHotels = mutableListOf<Hotel>()
+    vm.viewModelScope.launch {
+        allFavoritesRoom = getListOfFavorites(vm, login)
+        allFavoritesRoom.forEach {allFavoritesHotels.add(setHotelForRoom(vm, it.hotelID))  }
+        for(i in allFavoritesRoom.indices) {
+            allFavorites.add(Favorites(room = allFavoritesRoom[i], hotel = allFavoritesHotels[i]) )
+        }
+        favoritesList.swapList(allFavorites)
+        delay(1000)
+    }
     Log.i("List of favorites", favoritesList.toString())
-
     val bottomItems = listOf(BarItem.Search, BarItem.Favorites, BarItem.Bookings, BarItem.Profile)
+    val input = remember { mutableStateOf(TextFieldValue("")) }
+    val showSearchHelp = rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
-        bottomBar = { BottomBar(navController, bottomItems) }
+            bottomBar = { BottomBar(navController, bottomItems) }
     ) {
-        SearchHotelParametersBar(navController, Search())
-        Column(
-            modifier = Modifier
-                .padding(top = 120.dp, bottom = 68.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            for (i in favoritesList.indices) {
-                val hotel = rememberSaveable { mutableStateOf(Hotel()) }
-                vm.viewModelScope.launch { hotel.value = setHotelForRoom(vm, favoritesList[i].hotelID) }
-
-                FavouriteHotelCardDescription(navController, vm, favoritesList[i], hotel.value, user.login)
-
-                Spacer(modifier = Modifier.padding(top = 20.dp))
+        Column {
+            if (favoritesList.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LoadingAnimation()
+                }
+            } else {
+                SearchView(state = input, showSearchHelp)
+                FavoritesList(
+                    navController = navController, state = input, vm = vm,
+                    favoritesList = favoritesList
+                )
             }
+        }
+    }
+}
+
+@Composable
+fun SearchView(state: MutableState<TextFieldValue>, showSearchHelp: MutableState<Boolean>) {
+    TextField(
+        value = state.value,
+        onValueChange = { value ->
+            state.value = value
+            showSearchHelp.value = true
+        },
+        modifier = Modifier
+            .fillMaxWidth(),
+        textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
+        leadingIcon = {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = "",
+                modifier = Modifier
+                    .padding(15.dp)
+                    .size(24.dp)
+            )
+        },
+        trailingIcon = {
+            if (state.value != TextFieldValue("")) {
+                IconButton(
+                    onClick = {
+                        state.value =
+                            TextFieldValue("") // Remove text from TextField when you press the 'X' icon
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "",
+                        modifier = Modifier
+                            .padding(15.dp)
+                            .size(24.dp)
+                    )
+                }
+            }
+        },
+        singleLine = true,
+        shape = RectangleShape, // The TextFiled has rounded corners top left and right by default
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = Color.White,
+            cursorColor = Color.White,
+            leadingIconColor = Color.White,
+            trailingIconColor = Color.White,
+            backgroundColor = AdminCardColor,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
+        )
+    )
+}
+
+@SuppressLint("CoroutineCreationDuringComposition")
+@Composable
+fun FavoritesList(navController: NavController, vm: MainViewModel, favoritesList: SnapshotStateList<Favorites>,
+                  state: MutableState<TextFieldValue>
+) {
+    var filteredFavourites: List<Favorites>
+    LazyColumn(
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 64.dp)
+    ) {
+        val searchedText = state.value.text
+        filteredFavourites = if (searchedText.isEmpty()) {
+            favoritesList.toList()
+        } else {
+            val resultList = ArrayList<Favorites>()
+            for (fav in favoritesList) {
+                if ("${fav.hotel.name} ${fav.hotel.city}, ${fav.hotel.country}".lowercase(Locale.getDefault())
+                        .contains(searchedText.lowercase(Locale.getDefault()))
+                ) {
+                    resultList.add(fav)
+                }
+            }
+            resultList
+        }
+        items(filteredFavourites) { favourite ->
+            FavouriteHotelCardDescription(
+                navController = navController,
+                vm = vm,
+                room = favourite.room,
+                hotel = favourite.hotel,
+                login = "user"
+            )
+            Spacer(Modifier.padding(top = 12.dp))
         }
     }
 }
@@ -97,11 +219,11 @@ fun FavouriteHotelCardDescription(navController: NavController, vm: MainViewMode
             modifier = Modifier
                 .padding(top = 8.dp, start = 152.dp, bottom = 8.dp, end = 18.dp)
         ) {
-            Text(text = "Hotel", fontSize = 20.sp)
+            Text(text = hotel.name, fontSize = 20.sp)
 
             Spacer(modifier = Modifier.padding(top = 12.dp))
 
-            //Here will be street and building and add changing icon
+//Here will be street and building and add changing icon
             Row {
                 Row {
                     Icon(
@@ -185,9 +307,10 @@ fun FavouriteHotelCardDescription(navController: NavController, vm: MainViewMode
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun FavoriteButton(vm: MainViewModel, login: String, roomId: String/*, isFavorite: Boolean*/) {
-    Row(modifier = Modifier
-        .wrapContentHeight(Alignment.Top)
-        .padding(top = 8.dp, start = 96.dp)
+    Row(
+        modifier = Modifier
+            .wrapContentHeight(Alignment.Top)
+            .padding(top = 8.dp, start = 96.dp)
     ) {
         val favouriteVisible = remember { mutableStateOf(false) }
         vm.viewModelScope.launch { favouriteVisible.value = isRoomInFavorites(vm, roomId, login) }
@@ -230,18 +353,13 @@ fun FavoriteButton(vm: MainViewModel, login: String, roomId: String/*, isFavorit
     }
 }
 
-suspend fun getListOfFavorites(vm: MainViewModel, login: String) : List<Room>{
-    val result: Deferred<MutableList<Room>>
-    runBlocking {
-        result = async {vm.loadListOfFavorites(login)}
-    }
+suspend fun getListOfFavorites(vm: MainViewModel, login: String) : List<Room> {
+    val result: Deferred<MutableList<Room>> =
+        vm.viewModelScope.async { vm.loadListOfFavorites(login) }
     return result.await().toList()
 }
 
-suspend fun isRoomInFavorites(vm: MainViewModel, roomId: String, login: String): Boolean{
-    val result: Deferred<Boolean>
-    runBlocking {
-        result = async {vm.checkIsRoomInFavorites(roomId, login)}
-    }
+suspend fun isRoomInFavorites(vm: MainViewModel, roomId: String, login: String): Boolean {
+    val result = vm.viewModelScope.async { vm.checkIsRoomInFavorites(roomId, login) }
     return result.await()
 }

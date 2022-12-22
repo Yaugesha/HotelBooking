@@ -2,5 +2,6 @@
     <string name="app_name">Hotelbooking</string>
     <string name="main_activity">MainActivity</string>
     <string name="title_activity_authorization">Hotelbooking</string>
+    <string name="title_activity_users">Hotelbooking</string>
     <string name="title_activity_admin">AdminActivity</string>
 </resources>

@@ -1,4 +1,4 @@
-package by.yaugesha.hotelbooking.Main.Screens
+package by.yaugesha.hotelbooking.Admin.User
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import by.yaugesha.hotelbooking.Admin.AdminViewModel
 import by.yaugesha.hotelbooking.Admin.Hotel.Add.TextField
 import by.yaugesha.hotelbooking.Athorisation.Screens.PasswordField
 import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
@@ -34,12 +35,12 @@ import kotlinx.coroutines.runBlocking
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun EditProfileScreen(navController: NavController) {
-    val vm = MainViewModel()
+fun EditAdminProfileScreen(navController: NavController) {
+    val vm = AdminViewModel()
     val context = LocalContext.current
-    val login = remember {vm.getLogin(context)!!}
+    val login = remember {MainViewModel().getLogin(context)!!}
     var user = User()
-    vm.viewModelScope.launch { user = getUserData(vm, login) }
+    vm.viewModelScope.launch { user = getUserData(MainViewModel(), login) }
 
     Column(
         modifier = Modifier
@@ -48,27 +49,19 @@ fun EditProfileScreen(navController: NavController) {
             .verticalScroll(rememberScrollState())
     ) {
         val email = rememberSaveable { mutableStateOf (user.email) }
-        val name = rememberSaveable { mutableStateOf (user.name) }
-        val surname = rememberSaveable { mutableStateOf (user.surname) }
 
         TextField(string = email, field = "Email")
-        Spacer(modifier = Modifier.padding(top = 20.dp))
-        TextField(string = name, field = "Name")
-        Spacer(modifier = Modifier.padding(top = 20.dp))
-        TextField(string = surname, field = "Surname")
         Spacer(modifier = Modifier.padding(top = 20.dp))
         Button(
             onClick =
             {
                 user.login = login
-                user.name = name.value
                 user.email = email.value
-                user.surname = surname.value
-                vm.updateUser(user)
+                MainViewModel().updateUser(user)
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
             shape = (RoundedCornerShape(16.dp)),
-            enabled = name.value.isNotEmpty() && email.value.isNotEmpty() && surname.value.isNotEmpty(),
+            enabled = email.value.isNotEmpty(),
             modifier = Modifier.fillMaxWidth().width(44.dp)
         ) {
             Text(
@@ -88,7 +81,7 @@ fun EditProfileScreen(navController: NavController) {
         currentPassword.value = PasswordField("Current password")
 
         newPassword1.value = PasswordField("New password")
-        if (!vm.isPasswordSuitable(newPassword1.value))
+        if (!MainViewModel().isPasswordSuitable(newPassword1.value))
             Text(text = "Password must contains at least 1 digit and letter and min length: 8",
                 color = Color.Gray,
                 fontSize = 12.sp)
@@ -97,25 +90,25 @@ fun EditProfileScreen(navController: NavController) {
         if (newPassword1.value != newPassword2.value)
             Text(text = "Passwords mismatch", color = Color.Red)
         else
-            if(vm.isPasswordSuitable(newPassword1.value))
-                vm.setUserPassword(newPassword1.value)
+            if(MainViewModel().isPasswordSuitable(newPassword1.value))
+                MainViewModel().setUserPassword(newPassword1.value)
 
         Spacer(modifier = Modifier.padding(20.dp))
         Button(
             onClick =
             {
-                if(vm.isPasswordCorrect(user.login, currentPassword.value, user.password))
+                if(MainViewModel().isPasswordCorrect(user.login, currentPassword.value, user.password))
                 {
-                    if (vm.isPasswordSuitable(newPassword1.value))
+                    if (MainViewModel().isPasswordSuitable(newPassword1.value))
                         if (newPassword1.value == newPassword2.value)
-                            vm.updateUserPassword(user.login, newPassword1.value)
+                            MainViewModel().updateUserPassword(user.login, newPassword1.value)
                 }
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
             shape = (RoundedCornerShape(16.dp)),
             enabled = currentPassword.value.isNotEmpty() && newPassword1.value.isNotEmpty() &&
                     newPassword2.value.isNotEmpty() && newPassword1.value != newPassword2.value &&
-                    !vm.isPasswordSuitable(newPassword1.value),
+                    !MainViewModel().isPasswordSuitable(newPassword1.value),
             modifier = Modifier.fillMaxWidth().width(44.dp)
         ) {
             Text(

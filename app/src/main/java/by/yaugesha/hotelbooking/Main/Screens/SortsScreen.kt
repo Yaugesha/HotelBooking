@@ -170,18 +170,6 @@ fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean
                     modifier = Modifier.padding(top = 4.dp, start = 30.dp)
                 )
         }
-       /* else{
-            Text(text = "Status", fontSize = 16.sp)
-            Spacer(modifier = Modifier.padding(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                SortAmenities("Booked")
-                SortAmenities("Old")
-                SortAmenities("Canceled")
-            }
-        }*/
         Spacer(modifier = Modifier.padding(12.dp))
 
         Button(
@@ -201,6 +189,7 @@ fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean
                 val searchJson = Uri.encode(Gson().toJson(searchData))
                 navController.navigate(Screen.UserSearchResultScreen.route + "/" + searchJson.toString())
             },
+            enabled = minPrice.value != "0" && maxPrice.value != "0" && minPrice.value.toInt() <= maxPrice.value.toInt(),
             colors = ButtonDefaults.buttonColors(backgroundColor = ButtonColor),
             shape = (RoundedCornerShape(16.dp)),
             modifier = Modifier
@@ -213,8 +202,8 @@ fun SortScreen(navController: NavController, searchData: Search, isBook: Boolean
         Spacer(modifier = Modifier.padding(12.dp))
         Button(
             onClick = {
-                minPrice.value = ""
-                maxPrice.value = ""
+                minPrice.value = "0"
+                maxPrice.value = "0"
                 numberOfDoubleBeds.value = 0
                 numberOfSingleBeds.value = 0
                 mapOfAmenities = Search().sorts.mapOfAmenities

@@ -12,6 +12,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +28,7 @@ import by.yaugesha.hotelbooking.Authorization.ui.theme.ButtonColor
 import by.yaugesha.hotelbooking.DataClasses.Booking
 import by.yaugesha.hotelbooking.DataClasses.Hotel
 import by.yaugesha.hotelbooking.DataClasses.Room
+import by.yaugesha.hotelbooking.Main.LittleNumberInputField
 import by.yaugesha.hotelbooking.Main.MainViewModel
 import coil.compose.AsyncImage
 import kotlinx.coroutines.Deferred
@@ -50,6 +52,7 @@ fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, bo
     val vm = MainViewModel()
     val formatter = SimpleDateFormat("dd.MM.yyyy")
     val amountOfRooms = remember { mutableStateOf(booking.amountOfRooms.toString()) }
+    val guests = rememberSaveable { mutableStateOf(booking.guests.toString()) }
     val arrivalDate = remember { mutableStateOf(booking.checkInDate) }
     val departureDate = remember { mutableStateOf(booking.checkOutDate) }
     val nights = remember { mutableStateOf((abs(formatter.parse(arrivalDate.value)!!.time
@@ -112,14 +115,12 @@ fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, bo
                                                     room = room.roomId,
                                                     checkInDate = arrivalDate.value,
                                                     checkOutDate = departureDate.value,
+                                                    guests = guests.value.toInt(),
                                                     amountOfRooms = amountOfRooms.value.toInt(),
                                                     cost = (cost.value),
-                                                    date = LocalDate.now()
-                                                        .format(
-                                                            DateTimeFormatter.ofLocalizedDate(
-                                                                FormatStyle.SHORT
-                                                            )
-                                                        )
+                                                    date = LocalDate.now().format(
+                                                            DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                                                    )
                                                 )
                                                 vm.viewModelScope.launch {
                                                     checkBookingData.value =
@@ -288,7 +289,9 @@ fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, bo
 
                         Spacer(modifier = Modifier.padding(4.dp))
 
-                        ShowDateChangePicker1(context, arrivalDate, cost, room.price, departureDate, amountOfRooms, nights)
+                        ShowDateChangePicker1(
+                            context, arrivalDate, cost, room.price, departureDate,
+                            amountOfRooms, nights, status == "booked")
                     }
 
                     Spacer(modifier = Modifier.padding(start = 64.dp))
@@ -298,7 +301,10 @@ fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, bo
 
                         Spacer(modifier = Modifier.padding(4.dp))
 
-                        ShowDateChangePicker2(context, arrivalDate, cost, room.price, departureDate, amountOfRooms, nights)
+                        ShowDateChangePicker2(
+                            context, arrivalDate, cost, room.price, departureDate,
+                            amountOfRooms, nights, status == "booked"
+                        )
 
                     }
                 }
@@ -326,13 +332,33 @@ fun EditBookingScreen(navController: NavController, room: Room, hotel: Hotel, bo
                     }
                 }
                 Spacer(Modifier.padding(12.dp))
-                Column {
-                    Text(text = "Rooms", fontSize = 14.sp)
+                Row {
+                    Column {
+                        Text(text = "Guests", fontSize = 14.sp)
 
-                    Spacer(modifier = Modifier.padding(4.dp))
+                        Spacer(modifier = Modifier.padding(4.dp))
 
-                    RoomsNumberInputField(amountOfRooms, cost, nights, room.price)
+                        LittleNumberInputField(guests, status == "booked")
 
+                        if(guests.value != "") {
+                            if (guests.value.toInt() > room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds)
+                                Text(
+                                    text = "Number of guests can't be more then ${room.numberOfDoubleBeds * 3 + room.numberOfSingleBeds}",
+                                    color = Color.Red, fontSize = 10.sp
+                                )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.padding(start = 68.dp))
+
+                    Column {
+                        Text(text = "Rooms", fontSize = 14.sp)
+
+                        Spacer(modifier = Modifier.padding(4.dp))
+
+                        RoomsNumberInputField(amountOfRooms, cost, nights, room.price, status == "booked")
+
+                    }
                 }
                 Spacer(Modifier.padding(16.dp))
                 TopAmenitiesInOrder(amenities)
