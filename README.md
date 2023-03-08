@@ -3,8 +3,8 @@ This is a android app for hotel booking. Hotel's and user's data are stored in a
 
 
 <br />Sign In and Serach hotel screens <br />
-<img src = "https://user-images.githubusercontent.com/91755124/216614937-bb5d75aa-12a3-4a71-a8f3-be6cdda924d9.png" width="243"  />
-<img src = "https://user-images.githubusercontent.com/91755124/216614703-4584f94c-9529-4055-b82d-29bc1eecabfd.png" width="243"  /> <br /> <br />
+<img src = "https://user-images.githubusercontent.com/91755124/216614703-4584f94c-9529-4055-b82d-29bc1eecabfd.png" width="243" /> 
+<img src = "https://user-images.githubusercontent.com/91755124/216614937-bb5d75aa-12a3-4a71-a8f3-be6cdda924d9.png" width="243" /> <br /> <br />
 
  <br />Room and Booking screens <br />
 <img src = "https://user-images.githubusercontent.com/91755124/216615002-66cf0123-ed6c-4ea0-b92b-fe8af61eeaf5.png" width="243"  />
