@@ -109,6 +109,7 @@ fun SearchView(state: MutableState<TextFieldValue>, showSearchHelp: MutableState
         modifier = Modifier
             .fillMaxWidth(),
         textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
+        placeholder = { Text(text = "Hotel City, Country", fontSize = 14.sp, color = Color.White.copy(0.5f)) },
         leadingIcon = {
             Icon(
                 Icons.Default.Search,

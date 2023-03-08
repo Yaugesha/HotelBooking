@@ -32,11 +32,6 @@ fun AdminNavigation(login: String) {
         ) {
             AdminSearchHotelScreen(navController = navController)
         }
-        /*composable(
-            route = Screen.AdminSearchHotelScreen.route
-        ) {
-            AdminSearchHotelScreen(navController = navController)
-        }*/
         composable(
             route = Screen.HotelSearchResultScreen.route + "/{searchParameter}/{show}",
             arguments = listOf(
